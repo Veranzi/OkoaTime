@@ -2,26 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #0B3D5C;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-josefin text-navy bg-white antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-outfit;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange text-white font-outfit font-semibold rounded-xl hover:bg-orange-600 active:scale-95 transition-all duration-200 shadow-orange;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-navy text-white font-outfit font-semibold rounded-xl hover:bg-navy-600 active:scale-95 transition-all duration-200;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-navy text-navy font-outfit font-semibold rounded-xl hover:bg-navy hover:text-white active:scale-95 transition-all duration-200;
+  }
+
+  .btn-teal {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal text-white font-outfit font-semibold rounded-xl hover:bg-teal-600 active:scale-95 transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-6 hover:shadow-card-hover transition-shadow duration-300;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-xl text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal focus:border-transparent transition-all duration-200 font-josefin;
+  }
+
+  .label {
+    @apply block text-sm font-outfit font-semibold text-navy-700 mb-1.5;
+  }
+
+  .badge-status {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold font-outfit;
+  }
+
+  .portal-sidebar {
+    @apply fixed left-0 top-0 h-full w-64 bg-navy text-white flex flex-col z-40;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-6 py-3.5 text-sm font-josefin text-navy-100 hover:bg-navy-600 hover:text-white transition-colors duration-200 rounded-lg mx-2;
+  }
+
+  .sidebar-link-active {
+    @apply flex items-center gap-3 px-6 py-3.5 text-sm font-josefin text-white bg-orange rounded-lg mx-2;
+  }
+
+  .page-header {
+    @apply font-outfit font-bold text-2xl md:text-3xl text-navy;
+  }
+
+  .section-title {
+    @apply font-outfit font-bold text-2xl md:text-4xl text-navy text-center;
+  }
+
+  .stat-card {
+    @apply card flex flex-col gap-2;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
