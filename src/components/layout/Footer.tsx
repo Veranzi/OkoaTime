@@ -20,7 +20,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-3">
               <a
-                href="https://wa.me/254700000000"
+                href="https://wa.me/254707132823"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 bg-green-500 hover:bg-green-600 rounded-lg flex items-center justify-center transition-colors"
@@ -95,7 +95,8 @@ export default function Footer() {
             <h3 className="font-outfit font-bold text-sm uppercase tracking-wider text-navy-300 mb-4">Contact</h3>
             <ul className="space-y-3 text-sm font-josefin text-navy-200">
               <li>📍 Lamu Island, Kenya</li>
-              <li>📞 <a href="tel:+254700000000" className="hover:text-orange transition-colors">+254 700 000 000</a></li>
+              <li>📞 <a href="tel:+254707132823" className="hover:text-orange transition-colors">+254 707 132 823</a></li>
+              <li>📞 <a href="tel:+254740875071" className="hover:text-orange transition-colors">+254 740 875 071</a></li>
               <li>✉️ <a href="mailto:hello@okoatime.co.ke" className="hover:text-orange transition-colors">hello@okoatime.co.ke</a></li>
               <li className="pt-2">
                 <div className="text-xs text-navy-300 uppercase tracking-wider mb-2">Areas Served</div>
