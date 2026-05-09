@@ -37,8 +37,8 @@ export default function BoatEarningsPage() {
         <h3 className="font-outfit font-bold text-navy mb-4">Booking History</h3>
         <div className="space-y-3">
           {history.map((h) => (
-            <div key={h.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-              <div>
+            <div key={h.id} className="flex items-center gap-3 justify-between py-3 border-b border-gray-50 last:border-0">
+              <div className="min-w-0">
                 <p className="font-josefin text-gray-400 text-xs">{formatDate(h.date)}</p>
                 <p className="font-outfit font-bold text-navy text-sm">{h.route}</p>
                 <p className="font-josefin text-gray-400 text-xs">{h.passengers} passengers</p>

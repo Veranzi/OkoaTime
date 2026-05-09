@@ -70,7 +70,7 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-3 mt-4 text-center text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-center text-sm">
             {[
               { icon: <Truck className="w-4 h-4" />, label: "Active Deliveries", value: "6" },
               { icon: <Clock className="w-4 h-4" />, label: "Pending Orders", value: "8" },

@@ -99,11 +99,11 @@ export default function SupplierDashboard() {
         </div>
         <div className="space-y-3">
           {recentOrders.map((order) => (
-            <div key={order.id} className="card flex items-center justify-between">
-              <div>
+            <div key={order.id} className="card flex items-center gap-3 justify-between">
+              <div className="min-w-0">
                 <p className="font-josefin text-gray-400 text-xs">{formatRelative(order.time)}</p>
-                <p className="font-josefin font-semibold text-navy text-sm">{order.customer}</p>
-                <p className="font-josefin text-gray-500 text-xs">{order.items}</p>
+                <p className="font-josefin font-semibold text-navy text-sm truncate">{order.customer}</p>
+                <p className="font-josefin text-gray-500 text-xs truncate">{order.items}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <Badge variant={statusVariant[order.status] ?? "gray"}>

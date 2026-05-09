@@ -87,15 +87,15 @@ export default function ActiveDeliveryPage() {
 
       {/* Order Info */}
       <div className="card mb-4">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex flex-wrap items-center gap-3 mb-4">
           <div className="w-12 h-12 bg-teal rounded-2xl flex items-center justify-center flex-shrink-0">
             <span className="font-outfit font-bold text-white text-lg">{ORDER.customer.charAt(0)}</span>
           </div>
-          <div className="flex-1">
-            <p className="font-outfit font-bold text-navy">{ORDER.customer}</p>
-            <p className="font-josefin text-gray-400 text-sm">{ORDER.items}</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-outfit font-bold text-navy truncate">{ORDER.customer}</p>
+            <p className="font-josefin text-gray-400 text-sm truncate">{ORDER.items}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 ml-auto flex-shrink-0">
             <a href={`tel:${ORDER.phone}`}>
               <Button variant="teal" size="sm" className="p-2.5">
                 <Phone className="w-4 h-4" />
@@ -110,14 +110,14 @@ export default function ActiveDeliveryPage() {
         </div>
 
         <div className="space-y-2 pt-3 border-t border-gray-100 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-green-400">●</span>
-            <span className="font-josefin text-gray-500">Pickup:</span>
+          <div className="flex items-start gap-2">
+            <span className="text-green-400 flex-shrink-0">●</span>
+            <span className="font-josefin text-gray-500 flex-shrink-0">Pickup:</span>
             <span className="font-josefin font-semibold text-navy">{ORDER.pickupAddress}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-orange">📍</span>
-            <span className="font-josefin text-gray-500">Delivery:</span>
+          <div className="flex items-start gap-2">
+            <span className="text-orange flex-shrink-0">📍</span>
+            <span className="font-josefin text-gray-500 flex-shrink-0">Delivery:</span>
             <span className="font-josefin font-semibold text-navy">{ORDER.deliveryAddress}</span>
           </div>
         </div>

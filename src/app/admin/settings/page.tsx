@@ -31,7 +31,7 @@ export default function AdminSettingsPage() {
         <h3 className="font-outfit font-bold text-navy mb-4">Delivery Fee by Zone (KES)</h3>
         <div className="space-y-3">
           {zones.map((zone, i) => (
-            <div key={zone.id} className="flex items-center gap-4">
+            <div key={zone.id} className="flex flex-wrap items-center gap-3">
               <span className="font-josefin text-gray-600 text-sm flex-1">{zone.name}</span>
               <input
                 type="number"
@@ -48,7 +48,7 @@ export default function AdminSettingsPage() {
       {/* Commission Rate */}
       <div className="card">
         <h3 className="font-outfit font-bold text-navy mb-4">Platform Commission Rate</h3>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <input
             type="number"
             className="input-field w-24 text-right"

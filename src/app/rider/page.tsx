@@ -86,11 +86,11 @@ export default function RiderHomePage() {
         </div>
         <div className="space-y-3">
           {deliveryHistory.map((d) => (
-            <div key={d.id} className="card flex items-center justify-between">
-              <div>
+            <div key={d.id} className="card flex items-center gap-3 justify-between">
+              <div className="min-w-0">
                 <p className="font-josefin text-gray-400 text-xs">{formatRelative(d.date)}</p>
-                <p className="font-josefin font-semibold text-navy text-sm">{d.from}</p>
-                <p className="font-josefin text-gray-400 text-xs">{d.to}</p>
+                <p className="font-josefin font-semibold text-navy text-sm truncate">{d.from}</p>
+                <p className="font-josefin text-gray-400 text-xs truncate">{d.to}</p>
               </div>
               <div className="text-right">
                 <p className="font-outfit font-bold text-green-600">{formatKES(d.amount)}</p>

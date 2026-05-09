@@ -72,7 +72,7 @@ export default function BoatBookingsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3 text-sm">
               <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
                 <Calendar className="w-3.5 h-3.5" />
                 <span className="text-xs">{formatDate(booking.datetime)}</span>

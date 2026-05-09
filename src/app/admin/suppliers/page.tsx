@@ -52,12 +52,12 @@ export default function AdminSuppliersPage() {
       <div className="space-y-4">
         {suppliers.map((supplier) => (
           <div key={supplier.id} className={`card ${supplier.status === "pending" ? "border-l-4 border-l-orange" : ""}`}>
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">🏪</div>
-                <div>
-                  <p className="font-outfit font-bold text-navy">{supplier.businessName}</p>
-                  <p className="font-josefin text-gray-500 text-sm">{supplier.name} · {supplier.email}</p>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">🏪</div>
+                <div className="min-w-0">
+                  <p className="font-outfit font-bold text-navy truncate">{supplier.businessName}</p>
+                  <p className="font-josefin text-gray-500 text-sm truncate">{supplier.name} · {supplier.email}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs font-josefin text-gray-400">{supplier.category}</span>
                     <span className="text-gray-200">|</span>
@@ -73,7 +73,7 @@ export default function AdminSuppliersPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <div className="flex items-center gap-2">
                 <label className="font-josefin text-gray-500 text-sm">Commission Rate:</label>
                 <input

@@ -56,13 +56,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Promo Banner */}
-      <div className="bg-orange-50 border border-orange/20 rounded-2xl p-4 flex items-center gap-4">
-        <span className="text-3xl">🎉</span>
-        <div>
+      <div className="bg-orange-50 border border-orange/20 rounded-2xl p-4 flex flex-wrap items-center gap-3">
+        <span className="text-3xl flex-shrink-0">🎉</span>
+        <div className="flex-1 min-w-0">
           <p className="font-outfit font-bold text-orange text-sm">First Order Free Delivery!</p>
           <p className="font-josefin text-gray-600 text-xs">Use code <strong>FIRST</strong> on your first order and enjoy free delivery.</p>
         </div>
-        <Link href="/dashboard/order/new" className="ml-auto flex-shrink-0">
+        <Link href="/dashboard/order/new" className="flex-shrink-0">
           <Button size="sm" variant="primary">Order Now</Button>
         </Link>
       </div>
@@ -78,14 +78,14 @@ export default function DashboardPage() {
             </div>
             <Badge variant="teal">Rider Assigned</Badge>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
             <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
               <span>🛵</span> {mockActiveOrder.riderName}
             </div>
             <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
               <Clock className="w-3.5 h-3.5" /> ETA {mockActiveOrder.eta}
             </div>
-            <div className="font-outfit font-bold text-navy ml-auto">
+            <div className="font-outfit font-bold text-navy sm:ml-auto">
               {formatKES(mockActiveOrder.total)}
             </div>
           </div>
