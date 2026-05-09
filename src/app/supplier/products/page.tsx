@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Plus, Edit2, Trash2, Eye, EyeOff, Search, Upload, ImageIcon, Loader2 } from "lucide-react";
 import { formatKES } from "@/lib/utils";
 import Button from "@/components/ui/Button";
@@ -164,7 +165,7 @@ export default function SupplierProductsPage() {
               {/* Product image */}
               <div className="relative h-36 bg-gray-100">
                 {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                  <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ImageIcon className="w-10 h-10 text-gray-300" />
@@ -260,7 +261,7 @@ export default function SupplierProductsPage() {
             >
               {draft.imageUrl ? (
                 <div className="relative h-40">
-                  <img src={draft.imageUrl} alt="Product preview" className="w-full h-full object-cover" />
+                  <Image src={draft.imageUrl} alt="Product preview" fill className="object-cover" />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                     <p className="font-josefin text-white text-sm font-semibold flex items-center gap-2">
                       <Upload className="w-4 h-4" /> Change photo

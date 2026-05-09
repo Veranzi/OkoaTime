@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import Image from "next/image";
 import { ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, RefreshCw, Search, ImageIcon } from "lucide-react";
 import { SERVICE_CATEGORIES, formatKES, toMpesaPhone } from "@/lib/utils";
 import { useOrderStore } from "@/lib/store/useOrderStore";
@@ -420,9 +421,9 @@ export default function NewOrderPage() {
                             }`}
                           >
                             {/* Product thumbnail */}
-                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
                               {product.imageUrl ? (
-                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <ImageIcon className="w-5 h-5 text-gray-300" />
@@ -524,7 +525,7 @@ export default function NewOrderPage() {
               <div>
                 <label className="label">Pin your location on the map</label>
                 <p className="font-josefin text-gray-400 text-xs mb-2">
-                  Tap "Use my location" or tap the map to pin your delivery spot.
+                  Tap &ldquo;Use my location&rdquo; or tap the map to pin your delivery spot.
                 </p>
                 <GoogleMapComponent
                   pickMode
