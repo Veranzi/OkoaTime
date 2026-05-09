@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Users: anyone logged in can read their own doc; admins can list all and update any
+    match /users/{uid} {
+      allow get: if request.auth != null;
+      allow list: if isAdmin();
+      allow write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
+    }
+
+    // Orders: any authenticated user can create/read/update
+    match /orders/{orderId} {
+      allow create: if request.auth != null;
+      allow read, update: if request.auth != null;
+    }
+
+    // Products: anyone can read; suppliers manage their own; admins manage all
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null &&
+        (resource.data.supplierId == request.auth.uid || isAdmin());
+    }
+
+    // Payments: authenticated users can read; only server (admin SDK) writes
+    match /payments/{paymentId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Bookings: authenticated users can read/create/update
+    match /bookings/{bookingId} {
+      allow read, create, update: if request.auth != null;
+    }
+  }
+}

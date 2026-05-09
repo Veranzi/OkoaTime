@@ -2,10 +2,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, RefreshCw, Search, ImageIcon } from "lucide-react";
 import { SERVICE_CATEGORIES, formatKES, toMpesaPhone } from "@/lib/utils";
 import { useOrderStore } from "@/lib/store/useOrderStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
+import { createOrder, updateOrder, getAvailableProducts } from "@/lib/firebase/db";
+import type { Product } from "@/lib/firebase/db";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
@@ -13,44 +15,6 @@ import GoogleMapComponent from "@/components/ui/GoogleMap";
 const DELIVERY_FEE = 150;
 
 const STEP_LABELS = ["Shop", "Delivery", "Review", "Payment"];
-
-const SAMPLE_PRODUCTS: Record<string, { name: string; price: number; unit: string }[]> = {
-  seafood: [
-    { name: "Grilled Tuna (500g)", price: 450, unit: "piece" },
-    { name: "King Prawns (300g)", price: 680, unit: "pack" },
-    { name: "Lobster (1kg)", price: 1200, unit: "piece" },
-    { name: "Snapper Fish (1kg)", price: 380, unit: "piece" },
-    { name: "Squid (500g)", price: 320, unit: "pack" },
-  ],
-  groceries: [
-    { name: "Unga wa Ugali (2kg)", price: 120, unit: "bag" },
-    { name: "Sugar (1kg)", price: 160, unit: "bag" },
-    { name: "Rice (2kg)", price: 220, unit: "bag" },
-    { name: "Cooking Oil (1L)", price: 280, unit: "bottle" },
-    { name: "Milk (500ml)", price: 65, unit: "packet" },
-  ],
-  fruits_veg: [
-    { name: "Tomatoes (500g)", price: 80, unit: "kg" },
-    { name: "Onions (1kg)", price: 90, unit: "kg" },
-    { name: "Mangoes (x4)", price: 150, unit: "piece" },
-    { name: "Coconut (x2)", price: 100, unit: "piece" },
-    { name: "Spinach (bunch)", price: 50, unit: "bunch" },
-  ],
-  household: [
-    { name: "Soap (Lifebuoy)", price: 60, unit: "bar" },
-    { name: "Omo Washing Powder (500g)", price: 120, unit: "pack" },
-    { name: "Toilet Paper (4-pack)", price: 180, unit: "pack" },
-    { name: "Charcoal (5kg)", price: 200, unit: "sack" },
-    { name: "Matchbox (x5)", price: 30, unit: "pack" },
-  ],
-};
-
-const FILTER_TABS = [
-  { id: "all", label: "All", icon: "🛍️" },
-  ...SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label, icon: c.icon })),
-];
-
-const ALL_PRODUCTS = Object.values(SAMPLE_PRODUCTS).flat();
 
 export default function NewOrderPage() {
   const router = useRouter();
@@ -64,16 +28,29 @@ export default function NewOrderPage() {
   const [browsing, setBrowsing] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedQty, setSelectedQty] = useState<Record<string, number>>({});
+  const [search, setSearch] = useState("");
+
+  // Real products from Firestore
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
 
   // Payment confirmation state
   type PaymentStatus = "idle" | "sending" | "awaiting" | "confirmed" | "failed" | "timeout";
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
   const [checkoutRequestId, setCheckoutRequestId] = useState("");
+  const [orderDocId, setOrderDocId] = useState("");
   const [mpesaReceipt, setMpesaReceipt] = useState("");
   const [failureReason, setFailureReason] = useState("");
   const [countdown, setCountdown] = useState(90);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    getAvailableProducts()
+      .then(setAllProducts)
+      .catch(() => toast.error("Could not load products"))
+      .finally(() => setProductsLoading(false));
+  }, []);
 
   // Poll payment status every 3 s while awaiting confirmation
   useEffect(() => {
@@ -88,6 +65,9 @@ export default function NewOrderPage() {
           clearInterval(countdownRef.current!);
           setMpesaReceipt(data.mpesaReceiptNumber ?? "");
           setPaymentStatus("confirmed");
+          if (orderDocId) {
+            updateOrder(orderDocId, { paymentStatus: "paid" }).catch(() => {});
+          }
           setTimeout(() => { reset(); router.push("/dashboard/orders"); }, 3500);
         } else if (data.status === "failed") {
           clearInterval(pollRef.current!);
@@ -125,30 +105,49 @@ export default function NewOrderPage() {
   const total = subtotal + DELIVERY_FEE;
 
   const cartItemCount = Object.values(selectedQty).reduce((s, q) => s + q, 0);
-  const cartSubtotal = ALL_PRODUCTS.reduce(
+  const cartSubtotal = allProducts.reduce(
     (s, p) => s + (selectedQty[p.name] ?? 0) * p.price,
     0
   );
 
-  const sectionsToShow =
-    activeFilter === "all"
-      ? Object.entries(SAMPLE_PRODUCTS).map(([catId, products]) => ({
-          catId,
-          catLabel: SERVICE_CATEGORIES.find((c) => c.id === catId)?.label ?? catId,
-          catIcon: SERVICE_CATEGORIES.find((c) => c.id === catId)?.icon ?? "📦",
-          products,
-        }))
-      : [
-          {
-            catId: activeFilter,
-            catLabel: SERVICE_CATEGORIES.find((c) => c.id === activeFilter)?.label ?? activeFilter,
-            catIcon: SERVICE_CATEGORIES.find((c) => c.id === activeFilter)?.icon ?? "📦",
-            products: SAMPLE_PRODUCTS[activeFilter] ?? [],
-          },
-        ];
+  // Filter products by search and category tab
+  const filteredProducts = allProducts.filter((p) => {
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
+    const matchCat = activeFilter === "all" || p.category === activeFilter;
+    return matchSearch && matchCat;
+  });
 
-  function openBrowse(filter: string) {
+  // Group filtered products into sections
+  const sectionsToShow = (() => {
+    if (activeFilter !== "all") {
+      return [{
+        catId: activeFilter,
+        catLabel: SERVICE_CATEGORIES.find((c) => c.id === activeFilter)?.label ?? activeFilter,
+        catIcon: SERVICE_CATEGORIES.find((c) => c.id === activeFilter)?.icon ?? "📦",
+        products: filteredProducts,
+      }];
+    }
+    const grouped: Record<string, Product[]> = {};
+    filteredProducts.forEach((p) => {
+      if (!grouped[p.category]) grouped[p.category] = [];
+      grouped[p.category].push(p);
+    });
+    return Object.entries(grouped).map(([catId, products]) => ({
+      catId,
+      catLabel: SERVICE_CATEGORIES.find((c) => c.id === catId)?.label ?? catId,
+      catIcon: SERVICE_CATEGORIES.find((c) => c.id === catId)?.icon ?? "📦",
+      products,
+    }));
+  })();
+
+  const filterTabs = [
+    { id: "all", label: "All", icon: "🛍️" },
+    ...SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label, icon: c.icon })),
+  ];
+
+  function openBrowse(filter: string, initialSearch = "") {
     setActiveFilter(filter);
+    setSearch(initialSearch);
     setBrowsing(true);
   }
 
@@ -157,38 +156,75 @@ export default function NewOrderPage() {
   }
 
   function handleAddItems() {
-    const newItems = ALL_PRODUCTS.filter((p) => (selectedQty[p.name] ?? 0) > 0).map((p) => ({
+    const selected = allProducts.filter((p) => (selectedQty[p.name] ?? 0) > 0);
+    if (selected.length === 0) {
+      toast.error("Add at least one item to continue");
+      return;
+    }
+    const newItems = selected.map((p) => ({
       name: p.name,
       quantity: selectedQty[p.name]!,
       price: p.price,
     }));
-    if (newItems.length === 0) {
-      toast.error("Add at least one item to continue");
-      return;
-    }
+
+    const cats = Array.from(new Set(selected.map((p) => p.category)));
+    const supplierIds = Array.from(new Set(selected.map((p) => p.supplierId)));
+
+    const { setCategory, setSupplier } = useOrderStore.getState();
+    setCategory(cats.length === 1 ? cats[0] : "mixed");
+    setSupplier(
+      supplierIds.length === 1 ? supplierIds[0] : "",
+      supplierIds.length === 1 ? (selected[0].supplierName ?? "") : ""
+    );
     setItems(newItems);
     setStep(2);
     setBrowsing(false);
   }
 
   async function handlePayment() {
+    const { category, supplierId, supplierName } = useOrderStore.getState();
+    const orderData = {
+      customerId: user?.uid ?? "",
+      customerName: user?.name ?? "",
+      customerPhone: user?.phone ?? "",
+      category: category || "mixed",
+      items,
+      subtotal,
+      deliveryFee: DELIVERY_FEE,
+      total,
+      deliveryAddress,
+      paymentMethod,
+      paymentStatus: "pending" as const,
+      status: "pending" as const,
+      notes: notes || undefined,
+      ...(supplierId ? { supplierId, supplierName } : {}),
+    };
+
     if (paymentMethod === "cash") {
-      toast.success("Order placed! Pay cash on delivery.");
-      reset();
-      router.push("/dashboard/orders");
+      try {
+        await createOrder(orderData);
+        toast.success("Order placed! Pay cash on delivery.");
+        reset();
+        router.push("/dashboard/orders");
+      } catch {
+        toast.error("Failed to place order. Try again.");
+      }
       return;
     }
 
     // M-Pesa flow
     setPaymentStatus("sending");
     try {
+      const docId = await createOrder(orderData);
+      setOrderDocId(docId);
+
       const res = await fetch("/api/payments/mpesa/stkpush", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone: toMpesaPhone(phone || user?.phone || ""),
           amount: total,
-          orderId: `OT-${Date.now()}`,
+          orderId: docId,
         }),
       });
       const data = await res.json() as { success: boolean; checkoutRequestId?: string; message?: string };
@@ -205,9 +241,6 @@ export default function NewOrderPage() {
     }
   }
 
-  // step index for progress bar: browse mode counts as step 1
-  const progressStep = step;
-
   return (
     <div className="max-w-2xl mx-auto">
       {/* Step Progress */}
@@ -217,11 +250,11 @@ export default function NewOrderPage() {
           return (
             <div key={label} className="flex items-center gap-2 flex-shrink-0">
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${
-                s < progressStep ? "bg-green-100 text-green-700" :
-                s === progressStep ? "bg-orange text-white" :
+                s < step ? "bg-green-100 text-green-700" :
+                s === step ? "bg-orange text-white" :
                 "bg-gray-100 text-gray-400"
               }`}>
-                {s < progressStep ? (
+                {s < step ? (
                   <Check className="w-3.5 h-3.5" />
                 ) : (
                   <span className="text-xs font-outfit font-bold w-3.5 text-center">{s}</span>
@@ -242,9 +275,23 @@ export default function NewOrderPage() {
         {step === 1 && !browsing && (
           <div className="p-6">
             <h2 className="font-outfit font-bold text-xl text-navy mb-1">What do you need?</h2>
-            <p className="font-josefin text-gray-500 text-sm mb-5">
-              Browse all products or jump straight to a category.
+            <p className="font-josefin text-gray-500 text-sm mb-4">
+              Search for a product or browse by category.
             </p>
+
+            {/* Search bar */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                className="input-field pl-10"
+                placeholder="Search products... e.g. tuna, rice, soap"
+                onFocus={() => openBrowse("all", "")}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (!browsing) openBrowse("all", e.target.value);
+                }}
+              />
+            </div>
 
             {/* Browse All */}
             <button
@@ -289,9 +336,9 @@ export default function NewOrderPage() {
         {step === 1 && browsing && (
           <div>
             {/* Header */}
-            <div className="flex items-center gap-3 p-5 pb-4 border-b border-gray-100">
+            <div className="flex items-center gap-3 p-5 pb-3 border-b border-gray-100">
               <button
-                onClick={() => setBrowsing(false)}
+                onClick={() => { setBrowsing(false); setSearch(""); }}
                 className="p-2 rounded-xl hover:bg-gray-100 flex-shrink-0"
               >
                 <ArrowLeft className="w-4 h-4 text-navy" />
@@ -306,9 +353,21 @@ export default function NewOrderPage() {
               </div>
             </div>
 
+            {/* Search bar */}
+            <div className="relative px-5 pt-3">
+              <Search className="absolute left-8 top-1/2 mt-1.5 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                className="input-field pl-10"
+                placeholder="Search products..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoFocus={!!search}
+              />
+            </div>
+
             {/* Category Filter Tabs */}
             <div className="flex gap-2 overflow-x-auto px-5 py-3 border-b border-gray-100">
-              {FILTER_TABS.map((tab) => (
+              {filterTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveFilter(tab.id)}
@@ -326,67 +385,98 @@ export default function NewOrderPage() {
 
             {/* Products */}
             <div className="p-5 space-y-6 pb-28">
-              {sectionsToShow.map((section) => (
-                <div key={section.catId}>
-                  {activeFilter === "all" && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-base">{section.catIcon}</span>
-                      <p className="font-outfit font-bold text-navy text-sm">{section.catLabel}</p>
-                      <div className="flex-1 h-px bg-gray-100" />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    {section.products.map((product) => {
-                      const qty = selectedQty[product.name] ?? 0;
-                      return (
-                        <div
-                          key={product.name}
-                          className={`flex items-center justify-between p-3 border rounded-xl transition-colors ${
-                            qty > 0 ? "border-orange/40 bg-orange-50/40" : "border-gray-100"
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="font-josefin font-semibold text-navy text-sm truncate">
-                              {product.name}
-                            </p>
-                            <p className="font-outfit font-bold text-orange text-sm">
-                              {formatKES(product.price)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                            {qty > 0 ? (
-                              <>
-                                <button
-                                  className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-navy text-base"
-                                  onClick={() => handleQtyChange(product.name, qty - 1)}
-                                >
-                                  −
-                                </button>
-                                <span className="font-outfit font-bold text-navy w-5 text-center text-sm">
-                                  {qty}
-                                </span>
-                                <button
-                                  className="w-7 h-7 rounded-lg bg-orange text-white hover:bg-orange-600 flex items-center justify-center font-bold text-base"
-                                  onClick={() => handleQtyChange(product.name, qty + 1)}
-                                >
-                                  +
-                                </button>
-                              </>
-                            ) : (
-                              <button
-                                className="px-3 py-1.5 rounded-lg bg-orange text-white text-xs font-outfit font-bold hover:bg-orange-600 transition-colors"
-                                onClick={() => handleQtyChange(product.name, 1)}
-                              >
-                                + Add
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+              {productsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-16 rounded-xl bg-gray-100 animate-pulse" />
+                  ))}
                 </div>
-              ))}
+              ) : sectionsToShow.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-3xl mb-2">🔍</p>
+                  <p className="font-outfit font-bold text-navy text-sm">No products found</p>
+                  <p className="font-josefin text-gray-400 text-xs mt-1">
+                    {search ? `No results for "${search}"` : "No products available in this category"}
+                  </p>
+                </div>
+              ) : (
+                sectionsToShow.map((section) => (
+                  <div key={section.catId}>
+                    {activeFilter === "all" && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-base">{section.catIcon}</span>
+                        <p className="font-outfit font-bold text-navy text-sm">{section.catLabel}</p>
+                        <div className="flex-1 h-px bg-gray-100" />
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      {section.products.map((product) => {
+                        const qty = selectedQty[product.name] ?? 0;
+                        return (
+                          <div
+                            key={product.id}
+                            className={`flex items-center gap-3 p-3 border rounded-xl transition-colors ${
+                              qty > 0 ? "border-orange/40 bg-orange-50/40" : "border-gray-100"
+                            }`}
+                          >
+                            {/* Product thumbnail */}
+                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ImageIcon className="w-5 h-5 text-gray-300" />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <p className="font-josefin font-semibold text-navy text-sm truncate">
+                                {product.name}
+                              </p>
+                              <p className="font-outfit font-bold text-orange text-sm">
+                                {formatKES(product.price)}
+                                <span className="font-josefin font-normal text-gray-400 text-xs ml-1">/{product.unit}</span>
+                              </p>
+                              {product.supplierName && (
+                                <p className="font-josefin text-gray-400 text-xs truncate">{product.supplierName}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {qty > 0 ? (
+                                <>
+                                  <button
+                                    className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-navy text-base"
+                                    onClick={() => handleQtyChange(product.name, qty - 1)}
+                                  >
+                                    −
+                                  </button>
+                                  <span className="font-outfit font-bold text-navy w-5 text-center text-sm">
+                                    {qty}
+                                  </span>
+                                  <button
+                                    className="w-7 h-7 rounded-lg bg-orange text-white hover:bg-orange-600 flex items-center justify-center font-bold text-base"
+                                    onClick={() => handleQtyChange(product.name, qty + 1)}
+                                  >
+                                    +
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  className="px-3 py-1.5 rounded-lg bg-orange text-white text-xs font-outfit font-bold hover:bg-orange-600 transition-colors"
+                                  onClick={() => handleQtyChange(product.name, 1)}
+                                >
+                                  + Add
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
 
               {/* Notes */}
               <div>
@@ -592,7 +682,6 @@ export default function NewOrderPage() {
                       </div>
                     </div>
 
-                    {/* Countdown ring */}
                     <div className="flex items-center justify-center gap-3 mb-6">
                       <div className="relative w-12 h-12">
                         <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
@@ -721,7 +810,6 @@ export default function NewOrderPage() {
                     variant="primary"
                     size="lg"
                     className="w-full"
-                    loading={paymentStatus === "sending"}
                     onClick={handlePayment}
                   >
                     <CreditCard className="w-4 h-4" />

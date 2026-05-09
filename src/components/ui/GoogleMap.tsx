@@ -162,7 +162,6 @@ export default function GoogleMapComponent({
           zoomControl: true,
           gestureHandling: "cooperative",
           clickableIcons: false,
-          cursor: pickMode ? "crosshair" : "grab",
         }}
       >
         {/* Single rider marker (tracking mode) */}

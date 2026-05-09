@@ -74,12 +74,33 @@ interface PortalLayoutProps {
   portal: PortalType;
 }
 
+const portalRoles: Record<PortalType, string[]> = {
+  customer: ["customer"],
+  supplier: ["supplier"],
+  rider: ["rider"],
+  boat: ["boat"],
+  admin: ["admin"],
+};
+
 export default function PortalLayout({ children, portal }: PortalLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearUser } = useAuthStore();
   const navItems = portalNavs[portal];
+
+  // Redirect if the logged-in user's role doesn't match this portal
+  if (user && !portalRoles[portal].includes(user.role)) {
+    const roleRedirects: Record<string, string> = {
+      customer: "/dashboard",
+      supplier: "/supplier",
+      rider: "/rider",
+      boat: "/boat",
+      admin: "/admin",
+    };
+    router.replace(roleRedirects[user.role] ?? "/");
+    return null;
+  }
 
   async function handleLogout() {
     await logoutUser();

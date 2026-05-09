@@ -10,6 +10,8 @@ export interface OrderItem {
 export interface NewOrderState {
   step: number;
   category: string;
+  supplierId: string;
+  supplierName: string;
   items: OrderItem[];
   deliveryAddress: string;
   deliveryLat?: number;
@@ -19,6 +21,7 @@ export interface NewOrderState {
   notes: string;
   setStep: (step: number) => void;
   setCategory: (category: string) => void;
+  setSupplier: (supplierId: string, supplierName: string) => void;
   setItems: (items: OrderItem[]) => void;
   setDelivery: (address: string, lat?: number, lng?: number) => void;
   setPayment: (method: "mpesa" | "cash", phone: string) => void;
@@ -29,6 +32,8 @@ export interface NewOrderState {
 export const useOrderStore = create<NewOrderState>()((set) => ({
   step: 1,
   category: "",
+  supplierId: "",
+  supplierName: "",
   items: [],
   deliveryAddress: "",
   paymentMethod: "mpesa",
@@ -36,6 +41,7 @@ export const useOrderStore = create<NewOrderState>()((set) => ({
   notes: "",
   setStep: (step) => set({ step }),
   setCategory: (category) => set({ category }),
+  setSupplier: (supplierId, supplierName) => set({ supplierId, supplierName }),
   setItems: (items) => set({ items }),
   setDelivery: (deliveryAddress, deliveryLat, deliveryLng) =>
     set({ deliveryAddress, deliveryLat, deliveryLng }),
@@ -45,6 +51,8 @@ export const useOrderStore = create<NewOrderState>()((set) => ({
     set({
       step: 1,
       category: "",
+      supplierId: "",
+      supplierName: "",
       items: [],
       deliveryAddress: "",
       paymentMethod: "mpesa",

@@ -1,20 +1,28 @@
 "use client";
+import { useEffect, useState } from "react";
 import { DollarSign, TrendingUp, Users } from "lucide-react";
 import { formatKES, formatDate } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import { useState } from "react";
 import toast from "react-hot-toast";
-
-const history = [
-  { id: "BK-001", route: "Lamu → Shela", passengers: 3, amount: 1500, commission: 150, net: 1350, date: new Date(Date.now() - 3 * 3600000) },
-  { id: "BK-003", route: "Lamu → Manda", passengers: 8, amount: 4000, commission: 400, net: 3600, date: new Date(Date.now() - 86400000) },
-  { id: "BK-005", route: "Shela → Manda", passengers: 4, amount: 2000, commission: 200, net: 1800, date: new Date(Date.now() - 3 * 86400000) },
-];
+import { useAuthStore } from "@/lib/store/useAuthStore";
+import { getBookingsByBoatOperator, tsToDate } from "@/lib/firebase/db";
+import type { Booking } from "@/lib/firebase/db";
 
 export default function BoatEarningsPage() {
+  const { user } = useAuthStore();
+  const [history, setHistory] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [payoutOpen, setPayoutOpen] = useState(false);
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    getBookingsByBoatOperator(user.uid)
+      .then((all) => setHistory(all.filter((b) => b.status === "completed")))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [user?.uid]);
 
   const weekNet = history.reduce((s, h) => s + h.net, 0);
   const monthNet = weekNet * 4;
@@ -35,21 +43,27 @@ export default function BoatEarningsPage() {
 
       <div className="card">
         <h3 className="font-outfit font-bold text-navy mb-4">Booking History</h3>
-        <div className="space-y-3">
-          {history.map((h) => (
-            <div key={h.id} className="flex items-center gap-3 justify-between py-3 border-b border-gray-50 last:border-0">
-              <div className="min-w-0">
-                <p className="font-josefin text-gray-400 text-xs">{formatDate(h.date)}</p>
-                <p className="font-outfit font-bold text-navy text-sm">{h.route}</p>
-                <p className="font-josefin text-gray-400 text-xs">{h.passengers} passengers</p>
+        {loading ? (
+          <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-16 bg-gray-50 rounded-xl animate-pulse" />)}</div>
+        ) : history.length === 0 ? (
+          <p className="text-center font-josefin text-gray-400 py-6">No completed bookings yet</p>
+        ) : (
+          <div className="space-y-3">
+            {history.map((h) => (
+              <div key={h.id} className="flex items-center gap-3 justify-between py-3 border-b border-gray-50 last:border-0">
+                <div className="min-w-0">
+                  <p className="font-josefin text-gray-400 text-xs">{formatDate(tsToDate(h.createdAt))}</p>
+                  <p className="font-outfit font-bold text-navy text-sm">{h.route}</p>
+                  <p className="font-josefin text-gray-400 text-xs">{h.passengers} passengers</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-josefin text-gray-400 text-xs">-{formatKES(h.commission)} commission</p>
+                  <p className="font-outfit font-bold text-green-600">{formatKES(h.net)}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-josefin text-gray-400 text-xs">-{formatKES(h.commission)} commission</p>
-                <p className="font-outfit font-bold text-green-600">{formatKES(h.net)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {payoutOpen && (

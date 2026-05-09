@@ -1,37 +1,45 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, Package, MapPin, ChevronRight, Clock } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { SERVICE_CATEGORIES, formatKES, formatRelative } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import { getOrdersByCustomer, tsToDate } from "@/lib/firebase/db";
+import type { Order } from "@/lib/firebase/db";
 
-const mockActiveOrder = {
-  id: "OT-K3X2P-AB12",
-  status: "rider_assigned" as const,
-  items: "2x Grilled Tuna, 1x King Prawns",
-  total: 1580,
-  riderName: "Hassan Mwangi",
-  eta: "25 mins",
-};
+const ACTIVE_STATUSES = new Set(["pending", "confirmed", "ready", "rider_assigned", "picked_up"]);
 
-const mockOrders = [
-  { id: "OT-K3X2P-AB12", category: "Seafood", status: "delivered", total: 2780, date: new Date(Date.now() - 86400000) },
-  { id: "OT-M1Y9Q-CD34", category: "Groceries", status: "delivered", total: 1200, date: new Date(Date.now() - 2 * 86400000) },
-  { id: "OT-P5Z7R-EF56", category: "Fruits & Veg", status: "cancelled", total: 650, date: new Date(Date.now() - 3 * 86400000) },
-];
-
-const statusBadge = {
+const statusBadge: Record<string, "green" | "red" | "yellow" | "blue" | "teal" | "orange" | "gray"> = {
   delivered: "green",
   cancelled: "red",
   pending: "yellow",
   confirmed: "blue",
+  ready: "teal",
   rider_assigned: "teal",
   picked_up: "orange",
-} as const;
+};
+
+const statusLabel: Record<string, string> = {
+  pending: "Pending",
+  confirmed: "Confirmed",
+  ready: "Ready for Pickup",
+  rider_assigned: "Rider Assigned",
+  picked_up: "Picked Up",
+};
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    getOrdersByCustomer(user.uid).then(setOrders).catch(() => {});
+  }, [user?.uid]);
+
+  const activeOrder = orders.find((o) => ACTIVE_STATUSES.has(o.status));
+  const recentOrders = orders.filter((o) => !ACTIVE_STATUSES.has(o.status)).slice(0, 3);
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -68,34 +76,44 @@ export default function DashboardPage() {
       </div>
 
       {/* Active Order */}
-      <div>
-        <h2 className="font-outfit font-bold text-lg text-navy mb-3">Active Order</h2>
-        <div className="card border-l-4 border-l-teal">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="font-josefin text-gray-500 text-xs mb-1">Order #{mockActiveOrder.id}</p>
-              <p className="font-josefin font-semibold text-navy text-sm">{mockActiveOrder.items}</p>
+      {activeOrder && (
+        <div>
+          <h2 className="font-outfit font-bold text-lg text-navy mb-3">Active Order</h2>
+          <div className="card border-l-4 border-l-teal">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="font-josefin text-gray-500 text-xs mb-1">Order #{activeOrder.id.slice(0, 12)}</p>
+                <p className="font-josefin font-semibold text-navy text-sm">
+                  {activeOrder.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
+                </p>
+              </div>
+              <Badge variant={statusBadge[activeOrder.status] ?? "gray"}>
+                {statusLabel[activeOrder.status] ?? activeOrder.status}
+              </Badge>
             </div>
-            <Badge variant="teal">Rider Assigned</Badge>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              {activeOrder.riderName && (
+                <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
+                  <span>🛵</span> {activeOrder.riderName}
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
+                <Clock className="w-3.5 h-3.5" /> {formatRelative(tsToDate(activeOrder.createdAt))}
+              </div>
+              <div className="font-outfit font-bold text-navy sm:ml-auto">
+                {formatKES(activeOrder.total)}
+              </div>
+            </div>
+            {(activeOrder.status === "rider_assigned" || activeOrder.status === "picked_up") && (
+              <Link href={`/dashboard/track/${activeOrder.id}`} className="block mt-4">
+                <Button variant="teal" size="sm" className="w-full">
+                  <MapPin className="w-4 h-4" /> Track Live
+                </Button>
+              </Link>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
-              <span>🛵</span> {mockActiveOrder.riderName}
-            </div>
-            <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
-              <Clock className="w-3.5 h-3.5" /> ETA {mockActiveOrder.eta}
-            </div>
-            <div className="font-outfit font-bold text-navy sm:ml-auto">
-              {formatKES(mockActiveOrder.total)}
-            </div>
-          </div>
-          <Link href={`/dashboard/track/${mockActiveOrder.id}`} className="block mt-4">
-            <Button variant="teal" size="sm" className="w-full">
-              <MapPin className="w-4 h-4" /> Track Live
-            </Button>
-          </Link>
         </div>
-      </div>
+      )}
 
       {/* Quick Order by Category */}
       <div>
@@ -115,37 +133,33 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Orders */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-outfit font-bold text-lg text-navy">Recent Orders</h2>
-          <Link href="/dashboard/orders" className="text-teal font-josefin text-sm font-semibold flex items-center gap-1 hover:text-navy transition-colors">
-            View All <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="space-y-3">
-          {mockOrders.map((order) => (
-            <div key={order.id} className="card flex items-center justify-between hover:shadow-card-hover">
-              <div>
-                <p className="font-josefin text-gray-400 text-xs mb-0.5">{formatRelative(order.date)}</p>
-                <p className="font-josefin font-semibold text-navy text-sm">#{order.id}</p>
-                <p className="font-josefin text-gray-500 text-xs">{order.category}</p>
+      {recentOrders.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-outfit font-bold text-lg text-navy">Recent Orders</h2>
+            <Link href="/dashboard/orders" className="text-teal font-josefin text-sm font-semibold flex items-center gap-1 hover:text-navy transition-colors">
+              View All <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {recentOrders.map((order) => (
+              <div key={order.id} className="card flex items-center justify-between hover:shadow-card-hover">
+                <div>
+                  <p className="font-josefin text-gray-400 text-xs mb-0.5">{formatRelative(tsToDate(order.createdAt))}</p>
+                  <p className="font-josefin font-semibold text-navy text-sm">#{order.id.slice(0, 12)}</p>
+                  <p className="font-josefin text-gray-500 text-xs">{order.category}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge variant={statusBadge[order.status] ?? "gray"}>
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </Badge>
+                  <p className="font-outfit font-bold text-navy text-sm">{formatKES(order.total)}</p>
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-2">
-                <Badge variant={statusBadge[order.status as keyof typeof statusBadge] ?? "gray"}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </Badge>
-                <p className="font-outfit font-bold text-navy text-sm">{formatKES(order.total)}</p>
-                <Link href={`/dashboard/orders`}>
-                  <button className="text-teal text-xs font-josefin hover:text-navy flex items-center gap-1">
-                    Reorder <ChevronRight className="w-3 h-3" />
-                  </button>
-                </Link>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
