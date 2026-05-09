@@ -8,6 +8,7 @@ import { useOrderStore } from "@/lib/store/useOrderStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import GoogleMapComponent from "@/components/ui/GoogleMap";
 
 const DELIVERY_FEE = 150;
 
@@ -232,10 +233,22 @@ export default function NewOrderPage() {
 
             <div className="space-y-4">
               <div>
+                <label className="label">Pin your location on the map</label>
+                <p className="font-josefin text-gray-400 text-xs mb-2">Tap "Use my location" or tap anywhere on the map to pin your delivery spot.</p>
+                <GoogleMapComponent
+                  pickMode
+                  height="h-56"
+                  className="mb-3 border border-gray-100"
+                  onLocationPicked={(coords, address) => {
+                    setDelivery(address, coords.lat, coords.lng);
+                  }}
+                />
+              </div>
+              <div>
                 <label className="label">Delivery Address</label>
                 <textarea
                   className="input-field resize-none h-20"
-                  placeholder="e.g., Near the old fort, behind Petley's Inn, Lamu Town"
+                  placeholder="e.g., Near the old fort, behind Petley's Inn, Lamu Town — or pin on map above"
                   value={deliveryAddress}
                   onChange={(e) => setDelivery(e.target.value)}
                 />

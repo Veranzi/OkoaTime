@@ -15,7 +15,8 @@ export default function ContactSection() {
             <div className="space-y-4">
               {[
                 { icon: "📍", label: "Location", value: "Lamu Island, Kenya" },
-                { icon: "📞", label: "Phone / WhatsApp", value: "+254 700 000 000", href: "tel:+254700000000" },
+                { icon: "📞", label: "Phone", value: "+254 707 132 823", href: "tel:+254707132823" },
+                { icon: "📞", label: "Phone 2", value: "+254 740 875 071", href: "tel:+254740875071" },
                 { icon: "✉️", label: "Email", value: "hello@okoatime.co.ke", href: "mailto:hello@okoatime.co.ke" },
                 { icon: "🕐", label: "Operating Hours", value: "Daily 6:00 AM – 10:00 PM" },
               ].map((item) => (
