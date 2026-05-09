@@ -3,6 +3,8 @@ import { Users, ShoppingBag, DollarSign, Truck, Clock, TrendingUp } from "lucide
 import { formatKES, formatRelative } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import GoogleMapComponent from "@/components/ui/GoogleMap";
+import type { MapMarker } from "@/components/ui/GoogleMap";
 
 const stats = [
   { label: "Total Users", value: "247", icon: <Users className="w-5 h-5" />, color: "navy" as const, trend: "+12 this week" },
@@ -18,6 +20,13 @@ const recentActivity = [
   { type: "payment", message: "M-Pesa payment KES 1,580 received for #OT-K3X2P", time: new Date(Date.now() - 30 * 60000), status: "paid" },
   { type: "rider", message: "Hassan Mwangi went online", time: new Date(Date.now() - 45 * 60000), status: "active" },
   { type: "order", message: "Order #OT-P5Z7R cancelled by customer", time: new Date(Date.now() - 2 * 3600000), status: "cancelled" },
+];
+
+// Mock live rider positions around Lamu / Shela / Manda
+const LIVE_RIDERS: MapMarker[] = [
+  { position: { lat: -2.2720, lng: 40.9010 }, label: "Hassan", type: "rider" },
+  { position: { lat: -2.2650, lng: 40.9055 }, label: "David", type: "rider" },
+  { position: { lat: -2.2580, lng: 40.8980 }, label: "Ali", type: "rider" },
 ];
 
 const activityIcons: Record<string, string> = { order: "🛒", user: "👤", payment: "💰", rider: "🛵" };
@@ -53,23 +62,12 @@ export default function AdminDashboard() {
             <h3 className="font-outfit font-bold text-navy">Live Orders Map</h3>
             <Badge variant="green" className="animate-pulse">● Live</Badge>
           </div>
-          <div className="bg-gradient-to-br from-navy to-teal rounded-2xl h-56 flex items-center justify-center relative overflow-hidden">
-            <div className="text-center z-10">
-              <div className="text-4xl mb-2">🗺️</div>
-              <p className="font-josefin text-white font-semibold text-sm">Google Maps — Live Tracking</p>
-              <p className="font-josefin text-white/60 text-xs">All active deliveries in real-time</p>
-            </div>
-            {/* Mock rider pins */}
-            {[
-              { top: "25%", left: "30%", label: "🛵 Hassan" },
-              { top: "55%", left: "60%", label: "🛵 David" },
-              { top: "40%", left: "75%", label: "🛵 Ali" },
-            ].map((pin) => (
-              <div key={pin.label} className="absolute bg-orange text-white text-xs px-2 py-0.5 rounded-lg font-outfit font-bold shadow-md" style={{ top: pin.top, left: pin.left }}>
-                {pin.label}
-              </div>
-            ))}
-          </div>
+          <GoogleMapComponent
+            markers={LIVE_RIDERS}
+            height="h-56"
+            zoom={14}
+            className="w-full"
+          />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-center text-sm">
             {[
               { icon: <Truck className="w-4 h-4" />, label: "Active Deliveries", value: "6" },

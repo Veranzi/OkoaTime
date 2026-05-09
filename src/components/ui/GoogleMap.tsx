@@ -5,20 +5,30 @@ import { MapPin, Locate } from "lucide-react";
 
 interface LatLng { lat: number; lng: number }
 
+export interface MapMarker {
+  position: LatLng;
+  label: string;
+  type: "rider" | "destination" | "order";
+}
+
 interface Props {
-  /** Fixed rider location (tracking mode) */
+  /** Single rider location (tracking mode) */
   riderLocation?: LatLng;
-  /** Fixed destination (tracking mode) */
+  /** Single destination (tracking mode) */
   destinationLocation?: LatLng;
+  /** Multiple markers (admin live map) */
+  markers?: MapMarker[];
   /** If true, user can click map or use GPS to pick a delivery location */
   pickMode?: boolean;
   /** Called when user picks a location in pickMode */
   onLocationPicked?: (coords: LatLng, address: string) => void;
+  /** Override default zoom (15) */
+  zoom?: number;
   height?: string;
   className?: string;
 }
 
-// Lamu Town default
+// Lamu Town default centre
 const LAMU: LatLng = { lat: -2.2694, lng: 40.9023 };
 
 const MAP_STYLES = [
@@ -30,26 +40,33 @@ const MAP_STYLES = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
 ];
 
+const RIDER_ICON_URL = "https://maps.google.com/mapfiles/ms/icons/motorcycling.png";
+const DEST_ICON_URL  = "https://maps.google.com/mapfiles/ms/icons/red-dot.png";
+const ORDER_ICON_URL = "https://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const HAS_KEY = !!API_KEY && API_KEY !== "your_google_maps_api_key";
 
 export default function GoogleMapComponent({
   riderLocation,
   destinationLocation,
+  markers,
   pickMode = false,
   onLocationPicked,
+  zoom = 15,
   height = "h-64",
   className = "",
 }: Props) {
   const [pickedLocation, setPickedLocation] = useState<LatLng | null>(destinationLocation ?? null);
-  const [center, setCenter] = useState<LatLng>(riderLocation ?? destinationLocation ?? LAMU);
+  const [center, setCenter] = useState<LatLng>(
+    riderLocation ?? destinationLocation ?? markers?.[0]?.position ?? LAMU
+  );
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState("");
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: API_KEY,
-    // Only load if we have a key
     id: HAS_KEY ? "google-maps-script" : "",
   });
 
@@ -109,12 +126,15 @@ export default function GoogleMapComponent({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
+  // ── No API key fallback ──
   if (!HAS_KEY) {
     return (
       <div className={`bg-gradient-to-br from-navy to-teal rounded-2xl ${height} flex flex-col items-center justify-center gap-3 ${className}`}>
         <div className="text-5xl">🗺️</div>
         <p className="font-josefin text-white font-semibold text-sm">Live Map — Lamu · Shela · Manda</p>
-        <p className="font-josefin text-white/50 text-xs">Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable</p>
+        <p className="font-josefin text-white/50 text-xs text-center px-4">
+          Add <span className="font-mono bg-white/10 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</span> to enable
+        </p>
       </div>
     );
   }
@@ -127,12 +147,14 @@ export default function GoogleMapComponent({
     );
   }
 
+  const iconSize = new google.maps.Size(36, 36);
+
   return (
     <div className={`relative rounded-2xl overflow-hidden ${height} ${className}`}>
       <GoogleMap
         mapContainerStyle={{ width: "100%", height: "100%" }}
         center={center}
-        zoom={15}
+        zoom={zoom}
         onClick={handleMapClick}
         options={{
           styles: MAP_STYLES,
@@ -143,23 +165,47 @@ export default function GoogleMapComponent({
           cursor: pickMode ? "crosshair" : "grab",
         }}
       >
+        {/* Single rider marker (tracking mode) */}
         {riderLocation && (
           <Marker
             position={riderLocation}
             title="Rider"
-            icon={{ url: "https://maps.google.com/mapfiles/ms/icons/motorcycling.png", scaledSize: new google.maps.Size(40, 40) }}
+            icon={{ url: RIDER_ICON_URL, scaledSize: iconSize }}
           />
         )}
+
+        {/* Single destination marker */}
         {(pickedLocation ?? destinationLocation) && (
           <Marker
             position={pickedLocation ?? destinationLocation!}
             title="Delivery location"
-            icon={{ url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png", scaledSize: new google.maps.Size(40, 40) }}
+            icon={{ url: DEST_ICON_URL, scaledSize: iconSize }}
           />
         )}
+
+        {/* Multiple markers (admin live map) */}
+        {markers?.map((m) => (
+          <Marker
+            key={m.label}
+            position={m.position}
+            title={m.label}
+            label={{
+              text: m.label,
+              color: "#ffffff",
+              fontSize: "11px",
+              fontFamily: "Outfit, sans-serif",
+              fontWeight: "700",
+            }}
+            icon={{
+              url: m.type === "rider" ? RIDER_ICON_URL : m.type === "destination" ? DEST_ICON_URL : ORDER_ICON_URL,
+              scaledSize: iconSize,
+              labelOrigin: new google.maps.Point(18, -8),
+            }}
+          />
+        ))}
       </GoogleMap>
 
-      {/* GPS button — shown in pick mode */}
+      {/* GPS button */}
       {pickMode && (
         <button
           onClick={handleGPS}
