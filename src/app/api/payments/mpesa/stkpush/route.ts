@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { toMpesaPhone } from "@/lib/utils";
+import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 async function getMpesaToken(): Promise<string> {
   const consumerKey = process.env.MPESA_CONSUMER_KEY!;
@@ -69,6 +71,16 @@ export async function POST(req: NextRequest) {
     console.log("Daraja STK response:", JSON.stringify(data));
 
     if (data.ResponseCode === "0") {
+      // Persist a pending payment record so the callback and status endpoint can track it
+      await adminDb.collection("payments").add({
+        checkoutRequestId: data.CheckoutRequestID,
+        orderId,
+        phone: normalizedPhone,
+        amount: Math.ceil(amount),
+        status: "pending",
+        createdAt: FieldValue.serverTimestamp(),
+      });
+
       return NextResponse.json({
         success: true,
         checkoutRequestId: data.CheckoutRequestID,

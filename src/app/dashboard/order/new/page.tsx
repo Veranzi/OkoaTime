@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, RefreshCw } from "lucide-react";
 import { SERVICE_CATEGORIES, formatKES, toMpesaPhone } from "@/lib/utils";
 import { useOrderStore } from "@/lib/store/useOrderStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -64,7 +64,62 @@ export default function NewOrderPage() {
   const [browsing, setBrowsing] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedQty, setSelectedQty] = useState<Record<string, number>>({});
-  const [mpesaLoading, setMpesaLoading] = useState(false);
+
+  // Payment confirmation state
+  type PaymentStatus = "idle" | "sending" | "awaiting" | "confirmed" | "failed" | "timeout";
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
+  const [checkoutRequestId, setCheckoutRequestId] = useState("");
+  const [mpesaReceipt, setMpesaReceipt] = useState("");
+  const [failureReason, setFailureReason] = useState("");
+  const [countdown, setCountdown] = useState(90);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Poll payment status every 3 s while awaiting confirmation
+  useEffect(() => {
+    if (paymentStatus !== "awaiting" || !checkoutRequestId) return;
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/mpesa/status?checkoutRequestId=${checkoutRequestId}`);
+        const data = await res.json() as { status: string; mpesaReceiptNumber?: string; failureReason?: string };
+        if (data.status === "completed") {
+          clearInterval(pollRef.current!);
+          clearInterval(countdownRef.current!);
+          setMpesaReceipt(data.mpesaReceiptNumber ?? "");
+          setPaymentStatus("confirmed");
+          setTimeout(() => { reset(); router.push("/dashboard/orders"); }, 3500);
+        } else if (data.status === "failed") {
+          clearInterval(pollRef.current!);
+          clearInterval(countdownRef.current!);
+          setFailureReason(data.failureReason ?? "Payment was cancelled or failed");
+          setPaymentStatus("failed");
+        }
+      } catch { /* network hiccup — keep polling */ }
+    }, 3000);
+
+    return () => clearInterval(pollRef.current!);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentStatus, checkoutRequestId]);
+
+  // 90-second countdown timer while awaiting
+  useEffect(() => {
+    if (paymentStatus !== "awaiting") return;
+    setCountdown(90);
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(countdownRef.current!);
+          clearInterval(pollRef.current!);
+          setPaymentStatus("timeout");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(countdownRef.current!);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentStatus]);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + DELIVERY_FEE;
@@ -117,35 +172,36 @@ export default function NewOrderPage() {
   }
 
   async function handlePayment() {
-    if (paymentMethod === "mpesa") {
-      setMpesaLoading(true);
-      try {
-        const res = await fetch("/api/payments/mpesa/stkpush", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phone: toMpesaPhone(phone || user?.phone || ""),
-            amount: total,
-            orderId: `OT-${Date.now()}`,
-          }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          toast.success("Check your phone for the M-Pesa prompt!");
-          reset();
-          router.push("/dashboard/orders");
-        } else {
-          toast.error(data.message || "Payment failed");
-        }
-      } catch {
-        toast.error("Payment request failed. Try again.");
-      } finally {
-        setMpesaLoading(false);
-      }
-    } else {
+    if (paymentMethod === "cash") {
       toast.success("Order placed! Pay cash on delivery.");
       reset();
       router.push("/dashboard/orders");
+      return;
+    }
+
+    // M-Pesa flow
+    setPaymentStatus("sending");
+    try {
+      const res = await fetch("/api/payments/mpesa/stkpush", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: toMpesaPhone(phone || user?.phone || ""),
+          amount: total,
+          orderId: `OT-${Date.now()}`,
+        }),
+      });
+      const data = await res.json() as { success: boolean; checkoutRequestId?: string; message?: string };
+      if (data.success && data.checkoutRequestId) {
+        setCheckoutRequestId(data.checkoutRequestId);
+        setPaymentStatus("awaiting");
+      } else {
+        setPaymentStatus("idle");
+        toast.error(data.message || "Failed to send M-Pesa prompt. Try again.");
+      }
+    } catch {
+      setPaymentStatus("idle");
+      toast.error("Network error. Please try again.");
     }
   }
 
@@ -482,70 +538,204 @@ export default function NewOrderPage() {
         {/* ─── Step 4: Payment ─── */}
         {step === 4 && (
           <div className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <button onClick={() => setStep(3)} className="p-2 rounded-xl hover:bg-gray-100">
-                <ArrowLeft className="w-4 h-4 text-navy" />
-              </button>
-              <h2 className="font-outfit font-bold text-xl text-navy">Payment</h2>
-            </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                {(["mpesa", "cash"] as const).map((method) => (
-                  <button
-                    key={method}
-                    onClick={() => setPayment(method, phone)}
-                    className={`p-4 border-2 rounded-2xl text-center transition-all ${
-                      paymentMethod === method
-                        ? "border-orange bg-orange-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="text-2xl mb-1">{method === "mpesa" ? "📱" : "💵"}</div>
-                    <p className="font-outfit font-bold text-navy text-sm">
-                      {method === "mpesa" ? "M-Pesa" : "Cash on Delivery"}
-                    </p>
-                    <p className="font-josefin text-gray-400 text-xs mt-0.5">
-                      {method === "mpesa" ? "STK Push to your phone" : "Pay when delivered"}
-                    </p>
-                  </button>
-                ))}
+            {/* ── Payment confirmed ── */}
+            {paymentStatus === "confirmed" && (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-10 h-10 text-green-500" />
+                </div>
+                <h2 className="font-outfit font-black text-2xl text-navy mb-1">Payment Confirmed!</h2>
+                <p className="font-josefin text-gray-500 text-sm mb-4">
+                  Your order has been placed and is being prepared.
+                </p>
+                {mpesaReceipt && (
+                  <div className="bg-green-50 rounded-2xl p-4 mb-4 text-left">
+                    <p className="font-josefin text-xs text-gray-400 mb-1">M-Pesa Receipt</p>
+                    <p className="font-outfit font-bold text-navy text-lg tracking-wider">{mpesaReceipt}</p>
+                  </div>
+                )}
+                <div className="bg-gray-50 rounded-2xl p-4">
+                  <div className="flex justify-between font-outfit font-bold text-navy">
+                    <span>Amount Paid</span>
+                    <span className="text-green-600">{formatKES(total)}</span>
+                  </div>
+                </div>
+                <p className="font-josefin text-gray-400 text-xs mt-4 animate-pulse">
+                  Redirecting to your orders...
+                </p>
               </div>
+            )}
 
-              {paymentMethod === "mpesa" && (
-                <Input
-                  label="M-Pesa Phone Number"
-                  type="tel"
-                  placeholder="0712 345 678"
-                  defaultValue={user?.phone}
-                  onChange={(e) => setPayment("mpesa", e.target.value)}
-                />
-              )}
+            {/* ── Awaiting M-Pesa PIN ── */}
+            {(paymentStatus === "awaiting" || paymentStatus === "sending") && (
+              <div className="text-center py-8">
+                <div className="relative w-24 h-24 mx-auto mb-6">
+                  <div className="w-24 h-24 rounded-full border-4 border-orange/20 border-t-orange animate-spin" />
+                  <span className="absolute inset-0 flex items-center justify-center text-3xl">📱</span>
+                </div>
+                <h2 className="font-outfit font-black text-xl text-navy mb-2">
+                  {paymentStatus === "sending" ? "Sending M-Pesa Prompt…" : "Waiting for Your PIN"}
+                </h2>
+                <p className="font-josefin text-gray-500 text-sm mb-6 max-w-xs mx-auto">
+                  {paymentStatus === "sending"
+                    ? "Connecting to Safaricom…"
+                    : "Check your phone and enter your M-Pesa PIN to confirm the payment."}
+                </p>
 
-              <div className="bg-orange-50 rounded-2xl p-4">
-                <div className="flex justify-between font-outfit font-bold text-navy text-xl">
-                  <span>Total to Pay</span>
-                  <span className="text-orange">{formatKES(total)}</span>
+                {paymentStatus === "awaiting" && (
+                  <>
+                    <div className="bg-orange-50 rounded-2xl p-4 mb-4">
+                      <div className="flex justify-between font-outfit font-bold text-navy text-lg">
+                        <span>Amount</span>
+                        <span className="text-orange">{formatKES(total)}</span>
+                      </div>
+                    </div>
+
+                    {/* Countdown ring */}
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                      <div className="relative w-12 h-12">
+                        <svg className="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3" />
+                          <circle
+                            cx="18" cy="18" r="15.9"
+                            fill="none"
+                            stroke={countdown <= 20 ? "#E07B00" : "#0096B4"}
+                            strokeWidth="3"
+                            strokeDasharray={`${(countdown / 90) * 100} 100`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center font-outfit font-bold text-xs text-navy">
+                          {countdown}s
+                        </span>
+                      </div>
+                      <p className="font-josefin text-gray-400 text-sm">
+                        {countdown <= 20 ? "Timing out soon…" : "Waiting for confirmation"}
+                      </p>
+                    </div>
+
+                    <p className="font-josefin text-gray-400 text-xs">
+                      Didn&apos;t get a prompt?{" "}
+                      <button
+                        className="text-teal font-semibold hover:text-navy transition-colors"
+                        onClick={() => { setPaymentStatus("idle"); }}
+                      >
+                        Try again
+                      </button>
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Payment failed / cancelled ── */}
+            {(paymentStatus === "failed" || paymentStatus === "timeout") && (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-4xl">
+                    {paymentStatus === "timeout" ? "⏰" : "❌"}
+                  </span>
+                </div>
+                <h2 className="font-outfit font-black text-xl text-navy mb-2">
+                  {paymentStatus === "timeout" ? "Request Timed Out" : "Payment Not Completed"}
+                </h2>
+                <p className="font-josefin text-gray-500 text-sm mb-6 max-w-xs mx-auto">
+                  {paymentStatus === "timeout"
+                    ? "No confirmation received within 90 seconds."
+                    : failureReason || "The M-Pesa payment was cancelled or failed."}
+                </p>
+
+                <div className="space-y-3">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="w-full"
+                    onClick={() => setPaymentStatus("idle")}
+                  >
+                    <RefreshCw className="w-4 h-4" /> Try Again
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    className="w-full"
+                    onClick={() => setPayment("cash", phone)}
+                  >
+                    💵 Switch to Cash on Delivery
+                  </Button>
                 </div>
               </div>
+            )}
 
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full"
-                loading={mpesaLoading}
-                onClick={handlePayment}
-              >
-                <CreditCard className="w-4 h-4" />
-                {paymentMethod === "mpesa" ? "Pay with M-Pesa" : "Place Order (Cash)"}
-              </Button>
+            {/* ── Payment method selection (idle) ── */}
+            {paymentStatus === "idle" && (
+              <>
+                <div className="flex items-center gap-3 mb-6">
+                  <button onClick={() => setStep(3)} className="p-2 rounded-xl hover:bg-gray-100">
+                    <ArrowLeft className="w-4 h-4 text-navy" />
+                  </button>
+                  <h2 className="font-outfit font-bold text-xl text-navy">Payment</h2>
+                </div>
 
-              {paymentMethod === "mpesa" && (
-                <p className="font-josefin text-gray-400 text-xs text-center">
-                  You will receive an M-Pesa prompt on your phone. Enter your PIN to confirm.
-                </p>
-              )}
-            </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {(["mpesa", "cash"] as const).map((method) => (
+                      <button
+                        key={method}
+                        onClick={() => setPayment(method, phone)}
+                        className={`p-4 border-2 rounded-2xl text-center transition-all ${
+                          paymentMethod === method
+                            ? "border-orange bg-orange-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">{method === "mpesa" ? "📱" : "💵"}</div>
+                        <p className="font-outfit font-bold text-navy text-sm">
+                          {method === "mpesa" ? "M-Pesa" : "Cash on Delivery"}
+                        </p>
+                        <p className="font-josefin text-gray-400 text-xs mt-0.5">
+                          {method === "mpesa" ? "STK Push to your phone" : "Pay when delivered"}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {paymentMethod === "mpesa" && (
+                    <Input
+                      label="M-Pesa Phone Number"
+                      type="tel"
+                      placeholder="0712 345 678"
+                      defaultValue={user?.phone}
+                      onChange={(e) => setPayment("mpesa", e.target.value)}
+                    />
+                  )}
+
+                  <div className="bg-orange-50 rounded-2xl p-4">
+                    <div className="flex justify-between font-outfit font-bold text-navy text-xl">
+                      <span>Total to Pay</span>
+                      <span className="text-orange">{formatKES(total)}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    loading={paymentStatus === "sending"}
+                    onClick={handlePayment}
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    {paymentMethod === "mpesa" ? "Pay with M-Pesa" : "Place Order (Cash)"}
+                  </Button>
+
+                  {paymentMethod === "mpesa" && (
+                    <p className="font-josefin text-gray-400 text-xs text-center">
+                      You will receive an M-Pesa prompt on your phone. Enter your PIN to confirm.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
