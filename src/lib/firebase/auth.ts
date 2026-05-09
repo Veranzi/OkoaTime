@@ -91,7 +91,16 @@ export async function loginWithGoogle() {
   return user;
 }
 
+export function setSessionCookie() {
+  document.cookie = "session=1; path=/; max-age=86400; SameSite=Lax";
+}
+
+export function clearSessionCookie() {
+  document.cookie = "session=; path=/; max-age=0";
+}
+
 export async function logoutUser() {
+  clearSessionCookie();
   await signOut(auth);
 }
 

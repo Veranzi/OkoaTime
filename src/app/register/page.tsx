@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { registerUser, getUserProfile, getRoleRedirect } from "@/lib/firebase/auth";
+import { registerUser, getUserProfile, getRoleRedirect, setSessionCookie } from "@/lib/firebase/auth";
 import type { UserRole } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import Button from "@/components/ui/Button";
@@ -70,6 +70,7 @@ export default function RegisterPage() {
       const profile = await getUserProfile(firebaseUser.uid);
       if (!profile) throw new Error("Profile not found");
       setUser(profile);
+      setSessionCookie();
       toast.success("Account created successfully!");
       router.push(getRoleRedirect(profile.role));
     } catch (err: unknown) {

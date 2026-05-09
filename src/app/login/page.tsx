@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { loginUser, loginWithGoogle, getUserProfile, getRoleRedirect, resetPassword } from "@/lib/firebase/auth";
+import { loginUser, loginWithGoogle, getUserProfile, getRoleRedirect, resetPassword, setSessionCookie } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -38,6 +38,7 @@ export default function LoginPage() {
       const profile = await getUserProfile(firebaseUser.uid);
       if (!profile) throw new Error("Profile not found");
       setUser(profile);
+      setSessionCookie();
       toast.success(`Welcome back, ${profile.name}!`);
       router.push(getRoleRedirect(profile.role));
     } catch (err: unknown) {
@@ -53,6 +54,7 @@ export default function LoginPage() {
       const profile = await getUserProfile(firebaseUser.uid);
       if (!profile) throw new Error("Profile not found");
       setUser(profile);
+      setSessionCookie();
       toast.success(`Welcome, ${profile.name}!`);
       router.push(getRoleRedirect(profile.role));
     } catch {

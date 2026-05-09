@@ -11,7 +11,11 @@ async function getMpesaToken(): Promise<string> {
     { headers: { Authorization: `Basic ${auth}` } }
   );
 
-  const data = await res.json() as { access_token: string };
+  const data = await res.json() as { access_token?: string; error?: string };
+  if (!data.access_token) {
+    console.error("Token fetch failed:", JSON.stringify(data));
+    throw new Error("Failed to get M-Pesa token");
+  }
   return data.access_token;
 }
 
@@ -61,7 +65,8 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const data = await res.json() as { ResponseCode: string; CheckoutRequestID: string };
+    const data = await res.json() as { ResponseCode?: string; CheckoutRequestID?: string; errorMessage?: string; errorCode?: string };
+    console.log("Daraja STK response:", JSON.stringify(data));
 
     if (data.ResponseCode === "0") {
       return NextResponse.json({
@@ -70,7 +75,9 @@ export async function POST(req: NextRequest) {
         message: "STK Push sent. Check your phone.",
       });
     } else {
-      return NextResponse.json({ success: false, message: "STK Push failed" }, { status: 400 });
+      const errMsg = data.errorMessage ?? "STK Push failed";
+      console.error("Daraja error:", errMsg, "code:", data.errorCode);
+      return NextResponse.json({ success: false, message: errMsg }, { status: 400 });
     }
   } catch (error) {
     console.error("M-Pesa STK Push error:", error);
