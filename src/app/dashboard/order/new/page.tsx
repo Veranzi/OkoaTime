@@ -396,7 +396,7 @@ export default function NewOrderPage() {
                   <p className="text-3xl mb-2">🔍</p>
                   <p className="font-outfit font-bold text-navy text-sm">No products found</p>
                   <p className="font-josefin text-gray-400 text-xs mt-1">
-                    {search ? `No results for "${search}"` : "No products available in this category"}
+                    {search ? <>No results for &ldquo;{search}&rdquo;</> : "No products available in this category"}
                   </p>
                 </div>
               ) : (
