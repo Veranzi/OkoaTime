@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 import { registerUser, getUserProfile, getRoleRedirect, setSessionCookie } from "@/lib/firebase/auth";
 import type { UserRole } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -85,9 +86,7 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 bg-orange rounded-xl flex items-center justify-center">
-              <span className="text-white font-outfit font-black text-lg">O</span>
-            </div>
+            <Image src="/okoatiimelogoo.png" alt="OkoaTime" width={38} height={38} className="rounded-xl" />
             <span className="font-outfit font-bold text-xl text-navy">
               Okoa<span className="text-orange">Time</span>
             </span>
