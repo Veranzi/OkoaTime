@@ -42,7 +42,7 @@ export default function WhyOkoaTimeSection() {
               knowledge is our superpower.
             </p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {benefits.map((b) => (
                 <div key={b.title} className={`${b.bgColor} rounded-2xl p-5`}>
                   <div className="text-3xl mb-3">{b.icon}</div>

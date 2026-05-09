@@ -40,7 +40,7 @@ export default function ContactSection() {
           <div className="card">
             <h3 className="font-outfit font-bold text-xl text-navy mb-6">Send a Message</h3>
             <form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label">First Name</label>
                   <input className="input-field" placeholder="Fatuma" />

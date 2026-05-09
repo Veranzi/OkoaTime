@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Phone, MessageCircle, X } from "lucide-react";
-// STATUS_LABELS used implicitly via ORDER_TIMELINE labels
 import type { OrderStatus } from "@/lib/utils";
 import Button from "@/components/ui/Button";
+import GoogleMapComponent from "@/components/ui/GoogleMap";
 
 const ORDER_TIMELINE: { status: OrderStatus; label: string; time: string; done: boolean }[] = [
   { status: "pending", label: "Order Placed", time: "2:30 PM", done: true },
@@ -28,47 +28,40 @@ export default function TrackOrderPage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
         <div>
           <h1 className="page-header">Live Tracking</h1>
           <p className="font-josefin text-gray-500 text-sm">Order #{orderId}</p>
         </div>
         <button
           onClick={() => setCancelOpen(true)}
-          className="text-red-500 font-josefin text-sm hover:text-red-700 transition-colors"
+          className="text-red-500 font-josefin text-sm hover:text-red-700 transition-colors self-start sm:self-auto"
         >
           Cancel Order
         </button>
       </div>
 
-      {/* Map Placeholder */}
-      <div className="bg-gradient-to-br from-navy to-teal rounded-2xl h-64 flex items-center justify-center mb-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20"
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.3'%3E%3Cpath d='M20 20.5V18H0v5h5v5H0v5h20v-9.5zM0 0v5h5V0H0zm0 15h5V10H0v5z'/%3E%3C/g%3E%3C/svg%3E")` }}
-        />
-        <div className="text-center z-10">
-          <div className="text-5xl mb-2 animate-pulse-soft">📍</div>
-          <p className="font-josefin text-white font-semibold">Live Map — Google Maps</p>
-          <p className="font-josefin text-white/60 text-sm">Rider location updates every 30s</p>
-        </div>
-
-        {/* Rider pin */}
-        <div className="absolute top-1/3 left-1/3 bg-orange text-white text-xs px-2 py-1 rounded-lg font-outfit font-bold shadow-lg">
-          🛵 {RIDER.eta}
-        </div>
-      </div>
+      {/* Live Map */}
+      <GoogleMapComponent
+        riderLocation={{ lat: -2.2694, lng: 40.9023 }}
+        destinationLocation={{ lat: -2.2750, lng: 40.9080 }}
+        height="h-64"
+        className="mb-6"
+      />
 
       {/* Rider Info */}
       <div className="card mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-teal rounded-2xl flex items-center justify-center flex-shrink-0">
-            <span className="font-outfit font-bold text-white text-lg">
-              {RIDER.name.charAt(0)}
-            </span>
-          </div>
-          <div className="flex-1">
-            <p className="font-outfit font-bold text-navy">{RIDER.name}</p>
-            <p className="font-josefin text-gray-400 text-sm">{RIDER.vehicle} · ⭐ {RIDER.rating}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-12 h-12 bg-teal rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span className="font-outfit font-bold text-white text-lg">
+                {RIDER.name.charAt(0)}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-outfit font-bold text-navy truncate">{RIDER.name}</p>
+              <p className="font-josefin text-gray-400 text-sm">{RIDER.vehicle} · ⭐ {RIDER.rating}</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <a href={`tel:${RIDER.phone}`}>
