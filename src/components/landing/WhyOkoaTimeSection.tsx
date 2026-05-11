@@ -1,3 +1,6 @@
+"use client";
+import GoogleMapComponent from "@/components/ui/GoogleMap";
+
 const benefits = [
   {
     icon: "⚡",
@@ -66,13 +69,14 @@ export default function WhyOkoaTimeSection() {
                 </div>
               </div>
 
-              {/* Map placeholder */}
-              <div className="bg-white/10 rounded-2xl h-48 flex items-center justify-center mb-6 border border-white/20">
-                <div className="text-center">
-                  <div className="text-5xl mb-2">🗺️</div>
-                  <p className="font-josefin text-white/80 text-sm">Google Maps Integration</p>
-                  <p className="font-josefin text-white/50 text-xs">Real-time rider location</p>
-                </div>
+              {/* Live map preview */}
+              <div className="rounded-2xl h-48 overflow-hidden mb-6 border border-white/20">
+                <GoogleMapComponent
+                  riderLocation={{ lat: -2.2694, lng: 40.9023 }}
+                  destinationLocation={{ lat: -2.2750, lng: 40.9080 }}
+                  height="h-48"
+                  zoom={14}
+                />
               </div>
 
               <div className="space-y-3">
