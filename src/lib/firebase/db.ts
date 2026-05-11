@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, getDocs, updateDoc, deleteDoc,
-  query, where, serverTimestamp,
+  query, where, serverTimestamp, onSnapshot,
 } from "firebase/firestore";
 import { db } from "./config";
 import type { UserProfile } from "./auth";
@@ -56,8 +56,16 @@ export interface Order {
   riderId?: string;
   riderName?: string;
   riderPayout?: number;
+  riderLat?: number;
+  riderLng?: number;
   createdAt: unknown;
   updatedAt?: unknown;
+}
+
+export function listenToOrder(orderId: string, callback: (order: Order | null) => void): () => void {
+  return onSnapshot(doc(db, "orders", orderId), (snap) => {
+    callback(snap.exists() ? { id: snap.id, ...snap.data() } as Order : null);
+  });
 }
 
 export async function createOrder(data: Omit<Order, "id" | "createdAt" | "updatedAt">): Promise<string> {
