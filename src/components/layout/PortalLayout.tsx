@@ -25,8 +25,7 @@ const portalNavs: Record<PortalType, NavItem[]> = {
   customer: [
     { label: "Home", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: "New Order", href: "/dashboard/order/new", icon: <ShoppingBag className="w-5 h-5" /> },
-    { label: "Track Order", href: "/dashboard/orders", icon: <MapPin className="w-5 h-5" /> },
-    { label: "Order History", href: "/dashboard/orders", icon: <Package className="w-5 h-5" /> },
+    { label: "My Orders", href: "/dashboard/orders", icon: <Package className="w-5 h-5" /> },
     { label: "Profile", href: "/dashboard/profile", icon: <User className="w-5 h-5" /> },
   ],
   supplier: [
@@ -148,7 +147,10 @@ export default function PortalLayout({ children, portal }: PortalLayoutProps) {
         {/* Nav */}
         <nav className="flex-1 py-4 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const rootPaths = ["/dashboard", "/supplier", "/rider", "/boat", "/admin"];
+            const isActive = rootPaths.includes(item.href)
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
