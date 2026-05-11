@@ -25,8 +25,13 @@ export type OrderStatus =
   | "ready"
   | "rider_assigned"
   | "picked_up"
+  | "at_jetty"
+  | "boat_assigned"
+  | "on_water"
   | "delivered"
   | "cancelled";
+
+export type DeliveryType = "bike" | "boat" | "bike_to_boat";
 
 export interface OrderItem {
   name: string;
@@ -51,6 +56,7 @@ export interface Order {
   paymentMethod: "mpesa" | "cash";
   paymentStatus: "pending" | "paid";
   status: OrderStatus;
+  deliveryType?: DeliveryType;
   supplierId?: string;
   supplierName?: string;
   riderId?: string;
@@ -58,6 +64,10 @@ export interface Order {
   riderPayout?: number;
   riderLat?: number;
   riderLng?: number;
+  boatOperatorId?: string;
+  boatOperatorName?: string;
+  boatLat?: number;
+  boatLng?: number;
   createdAt: unknown;
   updatedAt?: unknown;
 }
@@ -107,6 +117,22 @@ export async function getAllOrders(): Promise<Order[]> {
 export async function getPendingOrders(): Promise<Order[]> {
   const snap = await getDocs(query(collection(db, "orders"), where("status", "==", "ready")));
   return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
+}
+
+export async function getWaterDeliveryOrders(boatOperatorId: string): Promise<Order[]> {
+  const snap = await getDocs(query(collection(db, "orders"), where("boatOperatorId", "==", boatOperatorId)));
+  return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
+}
+
+export async function getPendingBoatOrders(): Promise<Order[]> {
+  const snap = await getDocs(query(collection(db, "orders"), where("status", "==", "at_jetty")));
+  return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
+}
+
+export async function getDirectBoatOrders(): Promise<Order[]> {
+  const snap = await getDocs(query(collection(db, "orders"), where("deliveryType", "==", "boat")));
+  const all = byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
+  return all.filter((o) => o.status === "confirmed");
 }
 
 export async function getOrdersByRider(riderId: string): Promise<Order[]> {

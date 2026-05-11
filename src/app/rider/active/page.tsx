@@ -67,8 +67,21 @@ export default function ActiveDeliveryPage() {
       ? { lat: order.deliveryLat, lng: order.deliveryLng }
       : { lat: -2.2750, lng: 40.9080 };
 
+  const isBikeToBoat = order?.deliveryType === "bike_to_boat";
+
+  // For bike_to_boat: override last delivery step to hand off at jetty
+  const deliverButtonLabel =
+    currentStep === "deliver" && isBikeToBoat
+      ? "Hand to Boat Operator at Jetty"
+      : step?.buttonLabel ?? "";
+
+  const navigateCustomerLabel =
+    currentStep === "navigate_customer" && isBikeToBoat
+      ? "Navigate to Jetty"
+      : step?.label ?? "";
+
   async function handleNext() {
-    if (currentStep === "deliver" && !photoUploaded) {
+    if (currentStep === "deliver" && !isBikeToBoat && !photoUploaded) {
       toast.error("Please upload a delivery photo first");
       return;
     }
@@ -81,8 +94,14 @@ export default function ActiveDeliveryPage() {
 
     if (currentStep === "deliver") {
       if (locationIntervalRef.current) clearInterval(locationIntervalRef.current);
-      await updateOrderStatus(order.id, "delivered", { riderPayout: order.riderPayout ?? 120 });
-      setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+      if (isBikeToBoat) {
+        // Hand to boat operator at jetty
+        await updateOrderStatus(order.id, "at_jetty", { riderPayout: order.riderPayout ?? 120 });
+        setOrder((prev) => prev ? { ...prev, status: "at_jetty" } : prev);
+      } else {
+        await updateOrderStatus(order.id, "delivered", { riderPayout: order.riderPayout ?? 120 });
+        setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+      }
     }
 
     if (step.nextStep === null) {
@@ -200,10 +219,18 @@ export default function ActiveDeliveryPage() {
       {/* Current Step */}
       <div className={`card border-2 mb-4 ${currentStep === "done" ? "border-green-300 bg-green-50" : "border-orange/30"}`}>
         <p className="font-josefin text-gray-400 text-xs uppercase tracking-wider mb-1">Current Step</p>
-        <p className="font-outfit font-bold text-navy text-lg mb-1">{step.label}</p>
-        <p className="font-josefin text-gray-500 text-sm">{step.desc}</p>
+        <p className="font-outfit font-bold text-navy text-lg mb-1">
+          {currentStep === "navigate_customer" && isBikeToBoat ? navigateCustomerLabel : step.label}
+        </p>
+        <p className="font-josefin text-gray-500 text-sm">
+          {currentStep === "navigate_customer" && isBikeToBoat
+            ? "Head to the jetty to hand over to the boat operator"
+            : currentStep === "deliver" && isBikeToBoat
+              ? "Hand the items to the boat operator at the jetty"
+              : step.desc}
+        </p>
 
-        {currentStep === "deliver" && (
+        {currentStep === "deliver" && !isBikeToBoat && (
           <div className="mt-4">
             <label className="label">Delivery Photo (required)</label>
             <label className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-orange transition-colors">
@@ -227,12 +254,15 @@ export default function ActiveDeliveryPage() {
       </div>
 
       <Button variant="primary" size="lg" className="w-full" onClick={handleNext}>
-        {step.buttonLabel}
+        {deliverButtonLabel || step.buttonLabel}
       </Button>
 
       {currentStep === "done" && (
         <div className="text-center mt-4">
           <p className="font-outfit font-bold text-green-600 text-xl">+KES {order.riderPayout ?? 120} earned! 🎉</p>
+          {isBikeToBoat && (
+            <p className="font-josefin text-gray-400 text-sm mt-1">Handed to boat operator at jetty</p>
+          )}
         </div>
       )}
     </div>

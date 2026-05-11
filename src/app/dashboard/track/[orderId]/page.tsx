@@ -5,18 +5,39 @@ import { Phone, MessageCircle, Check, ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 import { listenToOrder, updateOrderStatus } from "@/lib/firebase/db";
-import type { Order } from "@/lib/firebase/db";
+import type { Order, DeliveryType } from "@/lib/firebase/db";
 import toast from "react-hot-toast";
 
-const TIMELINE: { status: string; label: string }[] = [
-  { status: "pending",        label: "Order Placed" },
-  { status: "confirmed",      label: "Order Confirmed" },
-  { status: "rider_assigned", label: "Rider Assigned" },
-  { status: "picked_up",      label: "Rider on the Way" },
-  { status: "delivered",      label: "Delivered" },
-];
-
-const STATUS_ORDER = ["pending", "confirmed", "rider_assigned", "picked_up", "delivered"];
+function getTimeline(deliveryType?: DeliveryType): { status: string; label: string }[] {
+  if (deliveryType === "boat") {
+    return [
+      { status: "pending",        label: "Order Placed" },
+      { status: "confirmed",      label: "Order Confirmed" },
+      { status: "boat_assigned",  label: "Boat Captain Assigned" },
+      { status: "on_water",       label: "On the Water" },
+      { status: "delivered",      label: "Delivered" },
+    ];
+  }
+  if (deliveryType === "bike_to_boat") {
+    return [
+      { status: "pending",        label: "Order Placed" },
+      { status: "confirmed",      label: "Order Confirmed" },
+      { status: "rider_assigned", label: "Rider Assigned" },
+      { status: "picked_up",      label: "Rider on the Way" },
+      { status: "at_jetty",       label: "At the Jetty" },
+      { status: "boat_assigned",  label: "Boat Captain Assigned" },
+      { status: "on_water",       label: "On the Water" },
+      { status: "delivered",      label: "Delivered" },
+    ];
+  }
+  return [
+    { status: "pending",        label: "Order Placed" },
+    { status: "confirmed",      label: "Order Confirmed" },
+    { status: "rider_assigned", label: "Rider Assigned" },
+    { status: "picked_up",      label: "Rider on the Way" },
+    { status: "delivered",      label: "Delivered" },
+  ];
+}
 
 export default function TrackOrderPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -91,11 +112,18 @@ export default function TrackOrderPage() {
     ? { lat: order.riderLat, lng: order.riderLng }
     : undefined;
 
+  const boatPos = order.boatLat && order.boatLng
+    ? { lat: order.boatLat, lng: order.boatLng }
+    : undefined;
+
   const destPos = order.deliveryLat && order.deliveryLng
     ? { lat: order.deliveryLat, lng: order.deliveryLng }
     : undefined;
 
-  const currentStatusIndex = STATUS_ORDER.indexOf(order.status);
+  const timeline = getTimeline(order.deliveryType);
+  const statusOrder = timeline.map((t) => t.status);
+  const currentStatusIndex = statusOrder.indexOf(order.status);
+  const movingPos = boatPos ?? riderPos;
 
   return (
     <div className="max-w-2xl">
@@ -104,7 +132,7 @@ export default function TrackOrderPage() {
           <h1 className="page-header">Live Tracking</h1>
           <p className="font-josefin text-gray-500 text-sm">Order #{order.id.slice(0, 12)}</p>
         </div>
-        {order.status !== "cancelled" && order.status !== "delivered" && order.status === "pending" && (
+        {order.status === "pending" && (
           <button
             onClick={() => setCancelOpen(true)}
             className="text-red-500 font-josefin text-sm hover:text-red-700 transition-colors self-start sm:self-auto"
@@ -117,46 +145,59 @@ export default function TrackOrderPage() {
       {/* Live Map */}
       <div className="relative mb-6">
         <GoogleMapComponent
-          riderLocation={riderPos ?? { lat: -2.2694, lng: 40.9023 }}
+          riderLocation={movingPos ?? { lat: -2.2694, lng: 40.9023 }}
           destinationLocation={destPos ?? { lat: -2.2750, lng: 40.9080 }}
           height="h-64"
           zoom={15}
         />
-        {riderPos && (
+        {movingPos && (
           <div className="absolute top-3 right-3 bg-orange text-white text-xs px-2 py-1 rounded-lg font-outfit font-bold flex items-center gap-1">
             <span className="w-2 h-2 bg-white rounded-full animate-pulse" /> Live
           </div>
         )}
       </div>
 
-      {/* Rider Info */}
-      {order.riderName && (
+      {/* Rider / Boat operator info */}
+      {(order.riderName || order.boatOperatorName) && (
         <div className="card mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-12 h-12 bg-teal rounded-2xl flex items-center justify-center flex-shrink-0">
-                <span className="font-outfit font-bold text-white text-lg">
-                  {order.riderName.charAt(0)}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-outfit font-bold text-navy truncate">{order.riderName}</p>
-                <p className="font-josefin text-gray-400 text-sm">Rider · On the way</p>
+          {order.riderName && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-12 h-12 bg-teal rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <span className="font-outfit font-bold text-white text-lg">{order.riderName.charAt(0)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-outfit font-bold text-navy truncate">{order.riderName}</p>
+                  <p className="font-josefin text-gray-400 text-sm">🛵 Rider</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <a href={`tel:${order.customerPhone}`}>
-                <Button variant="teal" size="sm" className="p-2.5">
-                  <Phone className="w-4 h-4" />
-                </Button>
-              </a>
-              <a href={`https://wa.me/${order.customerPhone?.replace("+", "")}`} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" className="p-2.5 bg-green-500 hover:bg-green-600 text-white">
-                  <MessageCircle className="w-4 h-4" />
-                </Button>
-              </a>
+          )}
+          {order.boatOperatorName && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-12 h-12 bg-navy rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <span className="font-outfit font-bold text-white text-lg">{order.boatOperatorName.charAt(0)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-outfit font-bold text-navy truncate">{order.boatOperatorName}</p>
+                  <p className="font-josefin text-gray-400 text-sm">⛵ Boat Captain</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a href={`tel:${order.customerPhone}`}>
+                  <Button variant="teal" size="sm" className="p-2.5">
+                    <Phone className="w-4 h-4" />
+                  </Button>
+                </a>
+                <a href={`https://wa.me/${order.customerPhone?.replace("+", "")}`} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" className="p-2.5 bg-green-500 hover:bg-green-600 text-white">
+                    <MessageCircle className="w-4 h-4" />
+                  </Button>
+                </a>
+              </div>
             </div>
-          </div>
+          )}
           <div className="mt-4 pt-4 border-t border-gray-100">
             <p className="font-josefin text-gray-500 text-sm">📍 Delivering to: <span className="font-semibold text-navy">{order.deliveryAddress}</span></p>
           </div>
@@ -167,8 +208,8 @@ export default function TrackOrderPage() {
       <div className="card">
         <h3 className="font-outfit font-bold text-navy mb-4">Order Status</h3>
         <div className="space-y-0">
-          {TIMELINE.map((item, i) => {
-            const done = STATUS_ORDER.indexOf(item.status) <= currentStatusIndex;
+          {timeline.map((item, i) => {
+            const done = statusOrder.indexOf(item.status) <= currentStatusIndex;
             const isActive = item.status === order.status;
             return (
               <div key={item.status} className="flex gap-4">
@@ -178,7 +219,7 @@ export default function TrackOrderPage() {
                     isActive ? "bg-orange border-orange animate-pulse" :
                     "bg-gray-100 border-gray-300"
                   }`} />
-                  {i < TIMELINE.length - 1 && (
+                  {i < timeline.length - 1 && (
                     <div className={`w-0.5 h-10 ${done ? "bg-green-200" : "bg-gray-100"}`} />
                   )}
                 </div>

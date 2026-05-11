@@ -9,11 +9,17 @@ import { useOrderStore } from "@/lib/store/useOrderStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { createOrder, updateOrder, getAvailableProducts } from "@/lib/firebase/db";
 import type { Product } from "@/lib/firebase/db";
+import type { DeliveryType } from "@/lib/firebase/db";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 
-const DELIVERY_FEE = 150;
+const DELIVERY_ZONES: { id: string; icon: string; label: string; desc: string; type: DeliveryType; fee: number; badge: string }[] = [
+  { id: "lamu_town",  icon: "🏘️", label: "Lamu Town",    desc: "Main town · Lamu Island",             type: "bike",         fee: 100, badge: "🛵 Bike" },
+  { id: "shela",      icon: "🏖️", label: "Shela",         desc: "Shela village & beach · Lamu Island",  type: "bike",         fee: 150, badge: "🛵 Bike" },
+  { id: "manda",      icon: "🏝️", label: "Manda Island",  desc: "Across the channel · bike + boat",     type: "bike_to_boat", fee: 250, badge: "🛵➡️⛵ Bike + Boat" },
+  { id: "other",      icon: "⛵",  label: "Other Island",  desc: "Pate, Siyu or further destinations",  type: "boat",         fee: 400, badge: "⛵ Boat" },
+];
 
 const STEP_LABELS = ["Shop", "Delivery", "Review", "Payment"];
 
@@ -21,8 +27,9 @@ export default function NewOrderPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const {
-    step, items, deliveryAddress, paymentMethod, phone, notes,
-    setStep, setItems, setDelivery, setPayment, setNotes, reset,
+    step, items, deliveryAddress, deliveryType, deliveryFee, deliveryZoneId,
+    paymentMethod, phone, notes,
+    setStep, setItems, setDelivery, setDeliveryZone, setPayment, setNotes, reset,
   } = useOrderStore();
 
   // Step 1 has two sub-views: entry (category picker) and browse (product list)
@@ -103,7 +110,7 @@ export default function NewOrderPage() {
   }, [paymentStatus]);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const total = subtotal + DELIVERY_FEE;
+  const total = subtotal + deliveryFee;
 
   const cartItemCount = Object.values(selectedQty).reduce((s, q) => s + q, 0);
   const cartSubtotal = allProducts.reduce(
@@ -191,9 +198,10 @@ export default function NewOrderPage() {
       category: category || "mixed",
       items,
       subtotal,
-      deliveryFee: DELIVERY_FEE,
+      deliveryFee: deliveryFee,
       total,
       deliveryAddress,
+      deliveryType,
       paymentMethod,
       paymentStatus: "pending" as const,
       status: "pending" as const,
@@ -518,44 +526,84 @@ export default function NewOrderPage() {
               >
                 <ArrowLeft className="w-4 h-4 text-navy" />
               </button>
-              <h2 className="font-outfit font-bold text-xl text-navy">Delivery Address</h2>
+              <h2 className="font-outfit font-bold text-xl text-navy">Delivery Details</h2>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Zone picker — auto-sets delivery type + fee */}
               <div>
-                <label className="label">Pin your location on the map</label>
-                <p className="font-josefin text-gray-400 text-xs mb-2">
-                  Tap &ldquo;Use my location&rdquo; or tap the map to pin your delivery spot.
+                <label className="label">Where should we deliver?</label>
+                <p className="font-josefin text-gray-400 text-xs mb-3">
+                  Pick your area — delivery method and fee are set automatically.
                 </p>
-                <GoogleMapComponent
-                  pickMode
-                  height="h-56"
-                  className="mb-3 border border-gray-100"
-                  onLocationPicked={(coords, address) => setDelivery(address, coords.lat, coords.lng)}
-                />
-              </div>
-              <div>
-                <label className="label">Delivery Address</label>
-                <textarea
-                  className="input-field resize-none h-20"
-                  placeholder="e.g., Near the old fort, behind Petley's Inn, Lamu Town"
-                  value={deliveryAddress}
-                  onChange={(e) => setDelivery(e.target.value)}
-                />
-              </div>
-              <div className="bg-gray-50 rounded-2xl p-4 flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-josefin font-semibold text-navy text-sm">GPS pin-drop available</p>
-                  <p className="font-josefin text-gray-500 text-xs mt-1">
-                    Use the map above to pin your exact location. Our rider will call you to confirm.
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {DELIVERY_ZONES.map((zone) => {
+                    const selected = deliveryZoneId === zone.id;
+                    return (
+                      <button
+                        key={zone.id}
+                        onClick={() => setDeliveryZone(zone.id, zone.type, zone.fee)}
+                        className={`flex items-start gap-3 p-4 border-2 rounded-2xl text-left transition-all ${
+                          selected ? "border-orange bg-orange-50" : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <span className="text-2xl flex-shrink-0 mt-0.5">{zone.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-outfit font-bold text-navy text-sm">{zone.label}</p>
+                          <p className="font-josefin text-gray-500 text-xs">{zone.desc}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="font-josefin text-xs text-gray-400">{zone.badge}</span>
+                            <span className={`font-outfit font-bold text-sm ${selected ? "text-orange" : "text-navy"}`}>
+                              KES {zone.fee}
+                            </span>
+                          </div>
+                        </div>
+                        {selected && <Check className="w-4 h-4 text-orange flex-shrink-0 mt-0.5" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-              {user?.phone && (
-                <p className="font-josefin text-gray-500 text-xs">
-                  Rider will contact you on: <strong className="text-navy">{user.phone}</strong>
-                </p>
+
+              {/* Address — shown after zone is picked */}
+              {deliveryZoneId && (
+                <>
+                  <div>
+                    <label className="label">Pin your exact location</label>
+                    <p className="font-josefin text-gray-400 text-xs mb-2">
+                      Tap &ldquo;Use my location&rdquo; or tap the map to drop a pin.
+                    </p>
+                    <GoogleMapComponent
+                      pickMode
+                      height="h-56"
+                      className="mb-3 border border-gray-100"
+                      onLocationPicked={(coords, address) => setDelivery(address, coords.lat, coords.lng)}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Delivery Address</label>
+                    <textarea
+                      className="input-field resize-none h-20"
+                      placeholder="e.g., Near the old fort, behind Petley's Inn, Lamu Town"
+                      value={deliveryAddress}
+                      onChange={(e) => setDelivery(e.target.value)}
+                    />
+                  </div>
+                  <div className="bg-gray-50 rounded-2xl p-4 flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-josefin font-semibold text-navy text-sm">GPS pin-drop available</p>
+                      <p className="font-josefin text-gray-500 text-xs mt-1">
+                        Our rider or boat captain will call you to confirm the spot.
+                      </p>
+                    </div>
+                  </div>
+                  {user?.phone && (
+                    <p className="font-josefin text-gray-500 text-xs">
+                      We will contact you on: <strong className="text-navy">{user.phone}</strong>
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -563,7 +611,9 @@ export default function NewOrderPage() {
               variant="primary"
               size="md"
               className="w-full mt-6"
+              disabled={!deliveryZoneId}
               onClick={() => {
+                if (!deliveryZoneId) return toast.error("Select your delivery area");
                 if (!deliveryAddress) return toast.error("Enter a delivery address");
                 setStep(3);
               }}
@@ -605,6 +655,14 @@ export default function NewOrderPage() {
                   <MapPin className="w-4 h-4" /> Delivery
                 </p>
                 <p className="font-josefin text-gray-600 text-sm">{deliveryAddress}</p>
+                {deliveryZoneId && (() => {
+                  const zone = DELIVERY_ZONES.find((z) => z.id === deliveryZoneId);
+                  return zone ? (
+                    <p className="font-josefin text-gray-400 text-xs mt-1">
+                      {zone.icon} {zone.label} · {zone.badge}
+                    </p>
+                  ) : null;
+                })()}
               </div>
 
               <div className="space-y-2">
@@ -612,7 +670,7 @@ export default function NewOrderPage() {
                   <span>Subtotal</span><span>{formatKES(subtotal)}</span>
                 </div>
                 <div className="flex justify-between font-josefin text-gray-500 text-sm">
-                  <span>Delivery Fee</span><span>{formatKES(DELIVERY_FEE)}</span>
+                  <span>Delivery Fee</span><span>{formatKES(deliveryFee)}</span>
                 </div>
                 <div className="flex justify-between font-outfit font-bold text-navy text-lg border-t border-gray-200 pt-2 mt-2">
                   <span>Total</span><span>{formatKES(total)}</span>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard, ShoppingBag, MapPin, User, LogOut, Menu, X,
+  LayoutDashboard, ShoppingBag, User, LogOut, Menu, X,
   Package, DollarSign, Settings, Users, TrendingUp, Ship, Truck,
   Bell,
 } from "lucide-react";
@@ -46,6 +46,7 @@ const portalNavs: Record<PortalType, NavItem[]> = {
     { label: "Dashboard", href: "/boat", icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: "My Boats", href: "/boat/listings", icon: <Ship className="w-5 h-5" /> },
     { label: "Bookings", href: "/boat/bookings", icon: <ShoppingBag className="w-5 h-5" /> },
+    { label: "Deliveries", href: "/boat/deliveries", icon: <Package className="w-5 h-5" /> },
     { label: "Earnings", href: "/boat/earnings", icon: <DollarSign className="w-5 h-5" /> },
   ],
   admin: [
