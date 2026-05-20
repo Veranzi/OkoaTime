@@ -38,7 +38,7 @@ export default function AppCTASection() {
 
         <p className="mt-8 text-navy-300 font-josefin text-sm">
           For now, order directly at{" "}
-          <span className="text-orange font-semibold">okoatime.co.ke</span> or via WhatsApp
+          <span className="text-orange font-semibold">okoatime.avytria.com</span> or via WhatsApp
         </p>
       </div>
     </section>

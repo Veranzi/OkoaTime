@@ -17,7 +17,7 @@ export default function ContactSection() {
                 { icon: "📍", label: "Location", value: "Lamu Island, Kenya" },
                 { icon: "📞", label: "Phone", value: "+254 707 132 823", href: "tel:+254707132823" },
                 { icon: "📞", label: "Phone 2", value: "+254 740 875 071", href: "tel:+254740875071" },
-                { icon: "✉️", label: "Email", value: "hello@okoatime.co.ke", href: "mailto:hello@okoatime.co.ke" },
+                { icon: "✉️", label: "Email", value: "hello@okoatime.avytria.com", href: "mailto:hello@okoatime.avytria.com" },
                 { icon: "🕐", label: "Operating Hours", value: "Daily 6:00 AM – 10:00 PM" },
               ].map((item) => (
                 <div key={item.label} className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">

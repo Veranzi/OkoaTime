@@ -97,7 +97,7 @@ export default function Footer() {
               <li>📍 Lamu Island, Kenya</li>
               <li>📞 <a href="tel:+254707132823" className="hover:text-orange transition-colors">+254 707 132 823</a></li>
               <li>📞 <a href="tel:+254740875071" className="hover:text-orange transition-colors">+254 740 875 071</a></li>
-              <li>✉️ <a href="mailto:hello@okoatime.co.ke" className="hover:text-orange transition-colors">hello@okoatime.co.ke</a></li>
+              <li>✉️ <a href="mailto:hello@okoatime.avytria.com" className="hover:text-orange transition-colors">hello@okoatime.avytria.com</a></li>
               <li className="pt-2">
                 <div className="text-xs text-navy-300 uppercase tracking-wider mb-2">Areas Served</div>
                 <div className="flex flex-wrap gap-2">

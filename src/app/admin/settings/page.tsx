@@ -16,7 +16,7 @@ export default function AdminSettingsPage() {
   const [zones, setZones] = useState(ZONES);
   const [commissionRate, setCommissionRate] = useState(10);
   const [smsTemplate, setSmsTemplate] = useState("Your OkoaTime order #{{orderId}} has been {{status}}. Rider: {{riderName}} · ETA: {{eta}} mins.");
-  const [pushTemplate, setPushTemplate] = useState("Your order is on its way! Track live at okoatime.co.ke/track/{{orderId}}");
+  const [pushTemplate, setPushTemplate] = useState("Your order is on its way! Track live at okoatime.avytria.com/track/{{orderId}}");
 
   function saveSettings() {
     toast.success("Settings saved successfully!");

@@ -48,7 +48,7 @@ const sections = [
   },
   {
     title: "8. Contact Us",
-    body: `For any questions about this policy, reach us at:\n📞 +254 707 132 823\n📞 +254 740 875 071\n✉️ hello@okoatime.co.ke\n📍 Lamu Island, Kenya`,
+    body: `For any questions about this policy, reach us at:\n📞 +254 707 132 823\n📞 +254 740 875 071\n✉️ hello@okoatime.avytria.com\n📍 Lamu Island, Kenya`,
   },
 ];
 
