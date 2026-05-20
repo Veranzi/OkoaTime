@@ -18,18 +18,30 @@ const josefinSans = Josefin_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "OkoaTime — Saving Time, Delivering Convenience.",
+  title: {
+    default: "OkoaTime — Saving Time, Delivering Convenience.",
+    template: "%s | OkoaTime",
+  },
   description:
     "On-demand delivery platform for Lamu, Shela & Manda Islands. Order seafood, groceries, household items and book boat transport.",
   keywords: ["delivery", "Lamu", "Kenya", "on-demand", "seafood", "M-Pesa"],
+  metadataBase: new URL("https://okoatime.avytria.com"),
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
   },
   openGraph: {
-    title: "OkoaTime",
-    description: "Saving Time, Delivering Convenience.",
+    title: "OkoaTime — Saving Time, Delivering Convenience.",
+    description: "On-demand delivery for Lamu, Shela & Manda Islands. Pay with M-Pesa.",
+    url: "https://okoatime.avytria.com",
+    siteName: "OkoaTime",
     type: "website",
+    locale: "en_KE",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OkoaTime — Saving Time, Delivering Convenience.",
+    description: "On-demand delivery for Lamu, Shela & Manda Islands. Pay with M-Pesa.",
   },
 };
 
