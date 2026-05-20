@@ -4,10 +4,10 @@ export default function ContactSection() {
   return (
     <section id="contact" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-start">
           <div>
             <p className="text-orange font-josefin font-semibold uppercase tracking-wider text-sm mb-3">Get In Touch</p>
-            <h2 className="font-outfit font-black text-4xl text-navy mb-4">Contact Us</h2>
+            <h2 className="font-outfit font-black text-3xl sm:text-4xl text-navy mb-4">Contact Us</h2>
             <p className="font-josefin text-gray-600 mb-8">
               Have questions? Want to become a supplier or rider? We&apos;d love to hear from you.
             </p>

@@ -49,8 +49,8 @@ export default function AdminOrdersPage() {
         </button>
       </div>
 
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <div className="relative flex-1 min-w-48">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input className="input-field pl-10" placeholder="Search by ID or customer..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>

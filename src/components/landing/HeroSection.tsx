@@ -15,8 +15,8 @@ export default function HeroSection() {
       />
 
       {/* Floating decorative elements */}
-      <div className="absolute top-1/4 right-10 w-32 h-32 bg-orange/20 rounded-full blur-2xl animate-pulse-soft" />
-      <div className="absolute bottom-1/3 left-10 w-48 h-48 bg-teal/20 rounded-full blur-3xl animate-pulse-soft" />
+      <div className="absolute top-1/4 right-4 sm:right-10 w-20 h-20 sm:w-32 sm:h-32 bg-orange/20 rounded-full blur-2xl animate-pulse-soft" />
+      <div className="absolute bottom-1/3 left-4 sm:left-10 w-28 h-28 sm:w-48 sm:h-48 bg-teal/20 rounded-full blur-3xl animate-pulse-soft" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -27,7 +27,7 @@ export default function HeroSection() {
               Now serving Lamu, Shela & Manda Islands
             </div>
 
-            <h1 className="font-outfit font-black text-4xl sm:text-5xl lg:text-6xl text-white leading-tight mb-4">
+            <h1 className="font-outfit font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-4">
               Order Anything.{" "}
               <span className="text-orange">Delivered Fast.</span>
             </h1>
@@ -111,7 +111,7 @@ export default function HeroSection() {
         </div>
 
         {/* Service Icons Row */}
-        <div className="mt-16 grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="mt-16 grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
           {[
             { icon: "🐟", label: "Seafood" },
             { icon: "🛒", label: "Shopping" },

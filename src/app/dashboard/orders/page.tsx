@@ -86,7 +86,7 @@ export default function OrdersPage() {
                 <div>
                   <p className="font-josefin text-gray-400 text-xs">{formatDate(tsToDate(order.createdAt))}</p>
                   <p className="font-outfit font-bold text-navy text-sm mt-0.5">#{order.id.slice(0, 12)}</p>
-                  <p className="font-josefin text-gray-500 text-xs mt-0.5">
+                  <p className="font-josefin text-gray-500 text-xs mt-0.5 line-clamp-1 max-w-[180px] sm:max-w-none">
                     {order.category} · {order.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
                   </p>
                 </div>

@@ -5,9 +5,9 @@ export default function Footer() {
   return (
     <footer className="bg-navy text-white pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 mb-12">
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <Image src="/okoatiimelogoo.png" alt="OkoaTime" width={38} height={38} className="rounded-xl flex-shrink-0" />
               <span className="font-outfit font-bold text-xl text-white">
@@ -112,7 +112,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-navy-600 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="border-t border-navy-600 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
           <p className="text-navy-300 font-josefin text-sm">
             © {new Date().getFullYear()} OkoaTime. All rights reserved.
           </p>

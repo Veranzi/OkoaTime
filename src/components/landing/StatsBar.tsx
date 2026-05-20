@@ -9,11 +9,11 @@ export default function StatsBar() {
   return (
     <section className="bg-navy py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-outfit font-black text-2xl md:text-3xl text-orange">{stat.value}</p>
-              <p className="font-josefin text-navy-200 text-sm mt-1">{stat.label}</p>
+              <p className="font-outfit font-black text-lg sm:text-2xl md:text-3xl text-orange break-words">{stat.value}</p>
+              <p className="font-josefin text-navy-200 text-xs sm:text-sm mt-1">{stat.label}</p>
             </div>
           ))}
         </div>

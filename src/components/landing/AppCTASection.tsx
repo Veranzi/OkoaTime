@@ -6,7 +6,7 @@ export default function AppCTASection() {
           <span>📲</span> Mobile App — Coming Soon
         </div>
 
-        <h2 className="font-outfit font-black text-3xl md:text-4xl text-white mb-4">
+        <h2 className="font-outfit font-black text-2xl sm:text-3xl md:text-4xl text-white mb-4">
           OkoaTime on Your Phone
         </h2>
         <p className="font-josefin text-navy-200 max-w-xl mx-auto mb-8">
