@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   description:
     "On-demand delivery platform for Lamu, Shela & Manda Islands. Order seafood, groceries, household items and book boat transport.",
   keywords: ["delivery", "Lamu", "Kenya", "on-demand", "seafood", "M-Pesa"],
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
   openGraph: {
     title: "OkoaTime",
     description: "Saving Time, Delivering Convenience.",
