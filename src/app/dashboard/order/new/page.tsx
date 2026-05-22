@@ -10,6 +10,7 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { createOrder, updateOrder, getAvailableProducts } from "@/lib/firebase/db";
 import type { Product } from "@/lib/firebase/db";
 import type { DeliveryType } from "@/lib/firebase/db";
+import { auth } from "@/lib/firebase/config";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
@@ -190,6 +191,12 @@ export default function NewOrderPage() {
   }
 
   async function handlePayment() {
+    // Ensure Firebase Auth token is ready before writing to Firestore
+    if (!auth.currentUser) {
+      toast.error("Session loading — please wait a moment and try again.");
+      return;
+    }
+
     const { category, supplierId, supplierName } = useOrderStore.getState();
     const orderData = {
       customerId: user?.uid ?? "",
@@ -215,8 +222,10 @@ export default function NewOrderPage() {
         toast.success("Order placed! Pay cash on delivery.");
         reset();
         router.push("/dashboard/orders");
-      } catch {
-        toast.error("Failed to place order. Try again.");
+      } catch (err) {
+        console.error("Cash order error:", err);
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(msg.includes("permission") ? "Session expired — please sign in again." : "Failed to place order. Try again.");
       }
       return;
     }
