@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,6 +21,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setUser } = useAuthStore();
   const [showPass, setShowPass] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -33,6 +34,11 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
+  function redirectAfterLogin(role: Parameters<typeof getRoleRedirect>[0]) {
+    const redirect = searchParams.get("redirect");
+    router.push(redirect ?? getRoleRedirect(role));
+  }
+
   async function onSubmit(data: FormData) {
     try {
       const firebaseUser = await loginUser(data.email, data.password);
@@ -41,7 +47,7 @@ export default function LoginPage() {
       setUser(profile);
       setSessionCookie();
       toast.success(`Welcome back, ${profile.name}!`);
-      router.push(getRoleRedirect(profile.role));
+      redirectAfterLogin(profile.role);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed";
       toast.error(msg.includes("invalid-credential") ? "Invalid email or password" : msg);
@@ -57,7 +63,7 @@ export default function LoginPage() {
       setUser(profile);
       setSessionCookie();
       toast.success(`Welcome, ${profile.name}!`);
-      router.push(getRoleRedirect(profile.role));
+      redirectAfterLogin(profile.role);
     } catch {
       toast.error("Google sign-in failed. Try again.");
     } finally {

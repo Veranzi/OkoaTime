@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
-import { getUserProfile } from "@/lib/firebase/auth";
+import { getUserProfile, setSessionCookie, clearSessionCookie } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 
 export function useAuth() {
@@ -14,11 +14,14 @@ export function useAuth() {
         try {
           const profile = await getUserProfile(firebaseUser.uid);
           setUser(profile);
+          setSessionCookie(); // refresh cookie whenever Firebase confirms auth
         } catch {
           setUser(null);
+          clearSessionCookie();
         }
       } else {
         setUser(null);
+        clearSessionCookie();
       }
     });
 
