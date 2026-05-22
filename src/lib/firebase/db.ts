@@ -109,6 +109,11 @@ export async function getOrdersByCategory(category: string): Promise<Order[]> {
   return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
 }
 
+export async function getOrdersBySupplier(supplierId: string): Promise<Order[]> {
+  const snap = await getDocs(query(collection(db, "orders"), where("supplierId", "==", supplierId)));
+  return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
+}
+
 export async function getAllOrders(): Promise<Order[]> {
   const snap = await getDocs(collection(db, "orders"));
   return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
