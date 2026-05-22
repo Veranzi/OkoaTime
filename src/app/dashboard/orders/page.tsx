@@ -98,7 +98,7 @@ export default function OrdersPage() {
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <p className="font-outfit font-bold text-navy">{formatKES(order.total)}</p>
                 <div className="flex items-center gap-2">
-                  {(order.status === "rider_assigned" || order.status === "picked_up") && (
+                  {!["pending", "delivered", "cancelled"].includes(order.status) && (
                     <Link href={`/dashboard/track/${order.id}`}>
                       <Button variant="teal" size="sm">
                         <MapPin className="w-3.5 h-3.5" /> Track

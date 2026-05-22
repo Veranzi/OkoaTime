@@ -125,6 +125,16 @@ export default function TrackOrderPage() {
   const currentStatusIndex = statusOrder.indexOf(order.status);
   const movingPos = boatPos ?? riderPos;
 
+  const statusMessage: Record<string, string> = {
+    confirmed:      "Your order is confirmed — the supplier is preparing your items.",
+    ready:          "Items are packed and waiting for a rider to pick up.",
+    rider_assigned: "A rider has been assigned and is heading to the supplier.",
+    picked_up:      "Rider has your order and is on the way to you!",
+    at_jetty:       "Your order has reached the jetty — a boat captain is taking over.",
+    boat_assigned:  "A boat captain has been assigned and will cross to you soon.",
+    on_water:       "Your order is on the water — almost there!",
+  };
+
   return (
     <div className="max-w-2xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
@@ -142,17 +152,28 @@ export default function TrackOrderPage() {
         )}
       </div>
 
-      {/* Live Map */}
+      {/* Status message */}
+      {statusMessage[order.status] && (
+        <div className="bg-teal/10 border border-teal/20 rounded-2xl px-4 py-3 mb-4 font-josefin text-teal text-sm font-semibold">
+          {statusMessage[order.status]}
+        </div>
+      )}
+
+      {/* Live Map — only shown once a moving pin or destination is available */}
       <div className="relative mb-6">
         <GoogleMapComponent
-          riderLocation={movingPos ?? { lat: -2.2694, lng: 40.9023 }}
-          destinationLocation={destPos ?? { lat: -2.2750, lng: 40.9080 }}
+          riderLocation={movingPos}
+          destinationLocation={destPos}
           height="h-64"
           zoom={15}
         />
-        {movingPos && (
+        {movingPos ? (
           <div className="absolute top-3 right-3 bg-orange text-white text-xs px-2 py-1 rounded-lg font-outfit font-bold flex items-center gap-1">
             <span className="w-2 h-2 bg-white rounded-full animate-pulse" /> Live
+          </div>
+        ) : (
+          <div className="absolute top-3 right-3 bg-gray-600/70 text-white text-xs px-2 py-1 rounded-lg font-josefin">
+            Waiting for GPS
           </div>
         )}
       </div>
