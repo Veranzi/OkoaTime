@@ -35,9 +35,9 @@ export default function SupplierEarningsPage() {
 
   const net = (amount: number) => Math.round(amount * (1 - COMMISSION_RATE));
 
-  const weekNet = thisWeekOrders.reduce((s, o) => s + net(o.total), 0);
-  const monthNet = thisMonthOrders.reduce((s, o) => s + net(o.total), 0);
-  const totalNet = orders.reduce((s, o) => s + net(o.total), 0);
+  const weekNet = thisWeekOrders.reduce((s, o) => s + net(o.subtotal), 0);
+  const monthNet = thisMonthOrders.reduce((s, o) => s + net(o.subtotal), 0);
+  const totalNet = orders.reduce((s, o) => s + net(o.subtotal), 0);
 
   async function requestPayout() {
     if (!payoutPhone) return toast.error("Enter your M-Pesa number");
@@ -117,13 +117,13 @@ export default function SupplierEarningsPage() {
               </thead>
               <tbody>
                 {orders.map((o) => {
-                  const commission = Math.round(o.total * COMMISSION_RATE);
-                  const netAmount = o.total - commission;
+                  const commission = Math.round(o.subtotal * COMMISSION_RATE);
+                  const netAmount = o.subtotal - commission;
                   return (
                     <tr key={o.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="py-3 pr-4 font-josefin text-gray-500 text-xs">{o.id.slice(0, 14)}</td>
                       <td className="py-3 pr-4 font-josefin font-semibold text-navy">{o.customerName}</td>
-                      <td className="py-3 pr-4 text-right font-outfit font-semibold text-navy">{formatKES(o.total)}</td>
+                      <td className="py-3 pr-4 text-right font-outfit font-semibold text-navy">{formatKES(o.subtotal)}</td>
                       <td className="py-3 pr-4 text-right font-josefin text-red-400">-{formatKES(commission)}</td>
                       <td className="py-3 pr-4 text-right font-outfit font-bold text-green-600">{formatKES(netAmount)}</td>
                       <td className="py-3 pr-4 font-josefin text-gray-400 text-xs whitespace-nowrap">{formatDate(tsToDate(o.createdAt))}</td>
