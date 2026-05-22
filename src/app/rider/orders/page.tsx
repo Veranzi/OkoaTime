@@ -10,6 +10,8 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getPendingOrders, updateOrderStatus, tsToDate } from "@/lib/firebase/db";
 import type { Order } from "@/lib/firebase/db";
 
+const RIDER_SHARE = 0.7; // rider gets 70%, OkoaTime keeps 30% of delivery fee
+
 const DELIVERY_BADGE: Record<string, string> = {
   bike: "🛵 Bike",
   bike_to_boat: "🛵➡️⛵ Bike + Boat",
@@ -44,7 +46,7 @@ export default function RiderOrdersPage() {
       await updateOrderStatus(order.id, "rider_assigned", {
         riderId: user.uid,
         riderName: user.name,
-        riderPayout: order.deliveryFee,
+        riderPayout: Math.round(order.deliveryFee * RIDER_SHARE), // OkoaTime keeps 30%
       });
       toast.success("Order accepted! Head to the supplier.");
       router.push("/rider/active");
@@ -110,7 +112,7 @@ export default function RiderOrdersPage() {
                 <div className="text-right">
                   <p className="font-josefin text-gray-400 text-xs">Your payout</p>
                   <p className="font-outfit font-bold text-green-600 text-lg">
-                    {formatKES(order.deliveryFee)}
+                    {formatKES(Math.round(order.deliveryFee * RIDER_SHARE))}
                   </p>
                 </div>
               </div>
@@ -152,7 +154,7 @@ export default function RiderOrdersPage() {
                 loading={accepting === order.id}
                 onClick={() => acceptOrder(order)}
               >
-                Accept — {formatKES(order.deliveryFee)} payout
+                Accept — {formatKES(Math.round(order.deliveryFee * RIDER_SHARE))} payout
               </Button>
             </div>
           ))}
