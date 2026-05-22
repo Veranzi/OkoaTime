@@ -212,7 +212,7 @@ export default function NewOrderPage() {
       paymentMethod,
       paymentStatus: "pending" as const,
       status: "pending" as const,
-      notes: notes || undefined,
+      ...(notes ? { notes } : {}),
       ...(supplierId ? { supplierId, supplierName } : {}),
     };
 
