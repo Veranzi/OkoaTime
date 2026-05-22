@@ -247,3 +247,52 @@ export async function getBookingsByBoatOperator(boatOperatorId: string): Promise
 export async function updateBookingStatus(bookingId: string, status: BookingStatus): Promise<void> {
   await updateDoc(doc(db, "bookings", bookingId), { status });
 }
+
+// ── Payout Requests ────────────────────────────────────────────────────────
+
+export type PayoutStatus = "pending" | "paid" | "rejected";
+
+export interface PayoutRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userRole: "supplier" | "rider" | "boat";
+  phone: string;
+  amount: number;
+  status: PayoutStatus;
+  mpesaRef?: string;
+  adminNote?: string;
+  createdAt: unknown;
+  processedAt?: unknown;
+}
+
+export async function createPayoutRequest(
+  data: Omit<PayoutRequest, "id" | "createdAt" | "status">
+): Promise<string> {
+  const ref = await addDoc(collection(db, "payoutRequests"), {
+    ...data,
+    status: "pending",
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function getPayoutRequestsByUser(userId: string): Promise<PayoutRequest[]> {
+  const snap = await getDocs(query(collection(db, "payoutRequests"), where("userId", "==", userId)));
+  return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as PayoutRequest));
+}
+
+export async function getAllPayoutRequests(): Promise<PayoutRequest[]> {
+  const snap = await getDocs(collection(db, "payoutRequests"));
+  return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as PayoutRequest));
+}
+
+export async function updatePayoutRequest(
+  id: string,
+  data: Partial<Pick<PayoutRequest, "status" | "mpesaRef" | "adminNote">>
+): Promise<void> {
+  await updateDoc(doc(db, "payoutRequests", id), {
+    ...data,
+    processedAt: serverTimestamp(),
+  });
+}
