@@ -30,13 +30,14 @@ export default function RiderEarningsPage() {
 
   useEffect(() => {
     if (!user?.uid) return;
-    Promise.all([
-      getOrdersByRider(user.uid).then((orders) => orders.filter((o) => o.status === "delivered")),
-      getPayoutRequestsByUser(user.uid),
-    ]).then(([delivered, reqs]) => {
-      setDeliveries(delivered);
-      setPayouts(reqs);
-    }).catch(() => {}).finally(() => setLoading(false));
+    const uid = user.uid;
+    getOrdersByRider(uid)
+      .then((orders) => setDeliveries(orders.filter((o) => o.status === "delivered")))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+    getPayoutRequestsByUser(uid)
+      .then(setPayouts)
+      .catch(console.error);
   }, [user?.uid]);
 
   const today = new Date(); today.setHours(0, 0, 0, 0);

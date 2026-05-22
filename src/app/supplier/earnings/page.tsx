@@ -32,13 +32,14 @@ export default function SupplierEarningsPage() {
 
   useEffect(() => {
     if (!user?.uid) return;
-    Promise.all([
-      getOrdersBySupplier(user.uid).then((all) => all.filter((o) => o.status === "delivered")),
-      getPayoutRequestsByUser(user.uid),
-    ]).then(([delivered, reqs]) => {
-      setOrders(delivered);
-      setPayouts(reqs);
-    }).catch(() => {}).finally(() => setLoading(false));
+    const uid = user.uid;
+    getOrdersBySupplier(uid)
+      .then((all) => setOrders(all.filter((o) => o.status === "delivered")))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+    getPayoutRequestsByUser(uid)
+      .then(setPayouts)
+      .catch(console.error);
   }, [user?.uid]);
 
   const now = new Date();

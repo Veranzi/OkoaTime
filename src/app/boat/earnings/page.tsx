@@ -30,13 +30,14 @@ export default function BoatEarningsPage() {
 
   useEffect(() => {
     if (!user?.uid) return;
-    Promise.all([
-      getBookingsByBoatOperator(user.uid).then((all) => all.filter((b) => b.status === "completed")),
-      getPayoutRequestsByUser(user.uid),
-    ]).then(([completed, reqs]) => {
-      setHistory(completed);
-      setPayouts(reqs);
-    }).catch(() => {}).finally(() => setLoading(false));
+    const uid = user.uid;
+    getBookingsByBoatOperator(uid)
+      .then((all) => setHistory(all.filter((b) => b.status === "completed")))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+    getPayoutRequestsByUser(uid)
+      .then(setPayouts)
+      .catch(console.error);
   }, [user?.uid]);
 
   const now = new Date();
