@@ -6,7 +6,7 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { formatKES, formatRelative } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import { getOrdersForCategories, getProductsBySupplier, tsToDate } from "@/lib/firebase/db";
+import { getSupplierIncomingOrders, getProductsBySupplier, tsToDate } from "@/lib/firebase/db";
 import type { Order } from "@/lib/firebase/db";
 
 const statusVariant: Record<string, "green" | "red" | "yellow" | "blue" | "teal" | "orange" | "gray"> = {
@@ -30,7 +30,7 @@ export default function SupplierDashboard() {
       .then((products) => {
         setProductCount(products.length);
         const cats = [user.serviceCategory ?? "", ...products.map((p) => p.category)];
-        return getOrdersForCategories(cats);
+        return getSupplierIncomingOrders(user.uid, cats);
       })
       .then(setOrders)
       .catch(() => {});

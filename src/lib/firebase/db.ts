@@ -105,20 +105,25 @@ export async function getOrdersByCustomer(customerId: string): Promise<Order[]> 
   return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
 }
 
-// A supplier can stock products across several categories, so match orders
-// against every category they sell in (not just their single serviceCategory).
-// New orders carry a `categories` array (handles multi-category "mixed" baskets);
-// legacy orders only have the single `category` field, so query both and merge.
-export async function getOrdersForCategories(categories: string[]): Promise<Order[]> {
+// Incoming orders for a supplier. A supplier can stock products across several
+// categories, so we match on every category they sell in (not just their single
+// serviceCategory) AND on orders explicitly tagged with their supplierId at
+// checkout. New orders carry a `categories` array (handles multi-category "mixed"
+// baskets); legacy orders only have the single `category` field — so we union
+// supplierId, array-contains-any, and category-in queries to catch every shape.
+export async function getSupplierIncomingOrders(supplierId: string, categories: string[]): Promise<Order[]> {
   const cats = Array.from(new Set(categories.filter(Boolean))).slice(0, 30);
-  if (cats.length === 0) return [];
-  const [byArray, byLegacy] = await Promise.all([
-    getDocs(query(collection(db, "orders"), where("categories", "array-contains-any", cats))),
-    getDocs(query(collection(db, "orders"), where("category", "in", cats))),
-  ]);
+  const queries = [
+    getDocs(query(collection(db, "orders"), where("supplierId", "==", supplierId))),
+  ];
+  if (cats.length > 0) {
+    queries.push(getDocs(query(collection(db, "orders"), where("categories", "array-contains-any", cats))));
+    queries.push(getDocs(query(collection(db, "orders"), where("category", "in", cats))));
+  }
+  const snaps = await Promise.all(queries);
   const map = new Map<string, Order>();
-  for (const d of [...byArray.docs, ...byLegacy.docs]) {
-    map.set(d.id, { id: d.id, ...d.data() } as Order);
+  for (const snap of snaps) {
+    for (const d of snap.docs) map.set(d.id, { id: d.id, ...d.data() } as Order);
   }
   return byCreatedAtDesc(Array.from(map.values()));
 }
