@@ -76,6 +76,21 @@ export const SERVICE_CATEGORIES = [
   { id: "boat", label: "Boat Transport", icon: "⛵", description: "Lamu · Shela · Manda routes" },
 ];
 
+// Categories an actual product can belong to (excludes "boat", which is transport).
+// The AI categorizer constrains its top-level pick to these IDs.
+export const PRODUCT_CATEGORIES = ["seafood", "groceries", "fruits_veg", "household"] as const;
+export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+
+// Seed subcategories per top category. The AI prefers one of these when it fits,
+// otherwise it proposes a new concise label. Subcategory is a flexible grouping/
+// display field — it is NOT used for supplier/order routing (only `category` is).
+export const SUBCATEGORY_SEEDS: Record<ProductCategory, string[]> = {
+  seafood: ["fish", "shellfish", "prawns & crabs", "lobster", "octopus & squid", "dried fish"],
+  groceries: ["cereals & grains", "flour", "rice", "legumes", "cooking oil", "sugar & salt", "spices", "beverages", "snacks", "canned goods"],
+  fruits_veg: ["fruits", "vegetables", "leafy greens", "herbs", "tubers"],
+  household: ["powder soaps", "detergents", "cleaning supplies", "toiletries", "paper products", "kitchenware"],
+};
+
 export function generateOrderId(): string {
   const prefix = "OT";
   const timestamp = Date.now().toString(36).toUpperCase();

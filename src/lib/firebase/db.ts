@@ -172,6 +172,7 @@ export interface Product {
   supplierName: string;
   name: string;
   category: string;
+  subcategory?: string;
   price: number;
   unit: string;
   available: boolean;

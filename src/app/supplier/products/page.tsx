@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Plus, Edit2, Trash2, Eye, EyeOff, Search, Upload, ImageIcon, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Search, Upload, ImageIcon, Loader2, Sparkles } from "lucide-react";
 import { formatKES } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -23,6 +23,7 @@ export default function SupplierProductsPage() {
   const [draft, setDraft] = useState<DraftProduct & { id?: string }>({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   async function load() {
     if (!user?.uid) return;
@@ -42,7 +43,7 @@ export default function SupplierProductsPage() {
 
   function openEdit(p: Product) {
     setDraft({
-      id: p.id, name: p.name, category: p.category, price: p.price,
+      id: p.id, name: p.name, category: p.category, subcategory: p.subcategory, price: p.price,
       unit: p.unit, available: p.available, description: p.description,
       imageUrl: p.imageUrl,
     });
@@ -71,6 +72,38 @@ export default function SupplierProductsPage() {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleAiAssist() {
+    if (!draft.name?.trim() && !draft.imageUrl) {
+      return toast.error("Add a product name or photo first");
+    }
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/ai/categorize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: draft.name, description: draft.description, imageUrl: draft.imageUrl }),
+      });
+      const data = await res.json() as {
+        category?: string; subcategory?: string; name?: string; unit?: string; description?: string; error?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "Categorization failed");
+
+      setDraft((prev) => ({
+        ...prev,
+        category: data.category ?? prev.category,
+        subcategory: data.subcategory ?? prev.subcategory,
+        name: prev.name?.trim() ? prev.name : (data.name ?? prev.name),
+        unit: prev.unit?.trim() ? prev.unit : (data.unit ?? prev.unit),
+        description: prev.description?.trim() ? prev.description : (data.description ?? prev.description),
+      }));
+      toast.success("AI filled in the details — review and save");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "AI assist failed");
+    } finally {
+      setAiLoading(false);
     }
   }
 
@@ -112,6 +145,7 @@ export default function SupplierProductsPage() {
           price: draft.price!,
           unit: draft.unit ?? "piece",
           available: draft.available ?? true,
+          ...(draft.subcategory ? { subcategory: draft.subcategory } : {}),
           ...(draft.description ? { description: draft.description } : {}),
           ...(draft.imageUrl ? { imageUrl: draft.imageUrl } : {}),
         });
@@ -212,6 +246,16 @@ export default function SupplierProductsPage() {
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={draft.id ? "Edit Product" : "Add Product"}>
         <div className="space-y-4">
 
+          <button
+            type="button"
+            onClick={handleAiAssist}
+            disabled={aiLoading}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-teal/30 bg-teal/5 px-4 py-2.5 font-josefin font-semibold text-sm text-teal hover:bg-teal/10 transition-colors disabled:opacity-60 disabled:cursor-wait"
+          >
+            {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {aiLoading ? "Analyzing…" : "AI Assist — categorize & fill from name or photo"}
+          </button>
+
           <Input
             label="Product Name"
             placeholder="e.g., Grilled Tuna (500g)"
@@ -227,6 +271,12 @@ export default function SupplierProductsPage() {
               <option value="household">Household Items</option>
             </select>
           </div>
+          <Input
+            label="Subcategory (optional)"
+            placeholder="e.g., powder soaps"
+            value={draft.subcategory ?? ""}
+            onChange={(e) => setDraft((p) => ({ ...p, subcategory: e.target.value }))}
+          />
           <Input
             label="Price (KES)"
             type="number"
