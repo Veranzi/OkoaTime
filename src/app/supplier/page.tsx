@@ -6,7 +6,7 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { formatKES, formatRelative } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import { getOrdersByCategory, getProductsBySupplier, tsToDate } from "@/lib/firebase/db";
+import { getOrdersForCategories, getProductsBySupplier, tsToDate } from "@/lib/firebase/db";
 import type { Order } from "@/lib/firebase/db";
 
 const statusVariant: Record<string, "green" | "red" | "yellow" | "blue" | "teal" | "orange" | "gray"> = {
@@ -26,10 +26,14 @@ export default function SupplierDashboard() {
 
   useEffect(() => {
     if (!user?.uid) return;
-    if (user.serviceCategory) {
-      getOrdersByCategory(user.serviceCategory).then(setOrders).catch(() => {});
-    }
-    getProductsBySupplier(user.uid).then((p) => setProductCount(p.length)).catch(() => {});
+    getProductsBySupplier(user.uid)
+      .then((products) => {
+        setProductCount(products.length);
+        const cats = [user.serviceCategory ?? "", ...products.map((p) => p.category)];
+        return getOrdersForCategories(cats);
+      })
+      .then(setOrders)
+      .catch(() => {});
   }, [user?.uid]);
 
   const today = new Date(); today.setHours(0, 0, 0, 0);

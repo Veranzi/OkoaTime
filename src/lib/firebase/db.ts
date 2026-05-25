@@ -105,12 +105,16 @@ export async function getOrdersByCustomer(customerId: string): Promise<Order[]> 
   return byCreatedAtDesc(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Order));
 }
 
-export async function getOrdersByCategory(category: string): Promise<Order[]> {
-  // New orders carry a `categories` array (handles multi-category "mixed" baskets);
-  // legacy orders only have the single `category` field, so query both and merge.
+// A supplier can stock products across several categories, so match orders
+// against every category they sell in (not just their single serviceCategory).
+// New orders carry a `categories` array (handles multi-category "mixed" baskets);
+// legacy orders only have the single `category` field, so query both and merge.
+export async function getOrdersForCategories(categories: string[]): Promise<Order[]> {
+  const cats = Array.from(new Set(categories.filter(Boolean))).slice(0, 30);
+  if (cats.length === 0) return [];
   const [byArray, byLegacy] = await Promise.all([
-    getDocs(query(collection(db, "orders"), where("categories", "array-contains", category))),
-    getDocs(query(collection(db, "orders"), where("category", "==", category))),
+    getDocs(query(collection(db, "orders"), where("categories", "array-contains-any", cats))),
+    getDocs(query(collection(db, "orders"), where("category", "in", cats))),
   ]);
   const map = new Map<string, Order>();
   for (const d of [...byArray.docs, ...byLegacy.docs]) {

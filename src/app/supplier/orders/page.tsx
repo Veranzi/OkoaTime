@@ -6,7 +6,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { getOrdersByCategory, updateOrderStatus, tsToDate } from "@/lib/firebase/db";
+import { getOrdersForCategories, getProductsBySupplier, updateOrderStatus, tsToDate } from "@/lib/firebase/db";
 import type { Order, OrderStatus } from "@/lib/firebase/db";
 
 const statusVariant: Record<string, "green" | "red" | "yellow" | "blue" | "teal" | "orange" | "gray"> = {
@@ -26,10 +26,12 @@ export default function SupplierOrdersPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   async function load() {
-    if (!user?.serviceCategory) return;
+    if (!user?.uid) return;
     setLoading(true);
     try {
-      const all = await getOrdersByCategory(user.serviceCategory);
+      const products = await getProductsBySupplier(user.uid);
+      const cats = [user.serviceCategory ?? "", ...products.map((p) => p.category)];
+      const all = await getOrdersForCategories(cats);
       setOrders(all);
     } finally {
       setLoading(false);
