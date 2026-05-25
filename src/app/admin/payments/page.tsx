@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Download, DollarSign, TrendingUp, CreditCard, RefreshCw, Banknote, Smartphone } from "lucide-react";
+import { Download, DollarSign, TrendingUp, RefreshCw, Banknote, Smartphone } from "lucide-react";
 import { formatKES, formatDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import { getAllOrders, tsToDate } from "@/lib/firebase/db";
