@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getProductsBySupplier, addProduct, updateProduct, deleteProduct } from "@/lib/firebase/db";
 import type { Product } from "@/lib/firebase/db";
+import ProductAiAssistant, { type ProposedProduct } from "@/components/supplier/ProductAiAssistant";
 
 type DraftProduct = Partial<Omit<Product, "id" | "supplierId" | "supplierName" | "createdAt">>;
 
@@ -38,6 +39,19 @@ export default function SupplierProductsPage() {
 
   function openAdd() {
     setDraft({ available: true, category: user?.serviceCategory ?? "seafood" });
+    setModalOpen(true);
+  }
+
+  function useProposedProduct(p: ProposedProduct) {
+    setDraft({
+      available: true,
+      name: p.name,
+      category: p.category,
+      subcategory: p.subcategory,
+      unit: p.unit,
+      description: p.description,
+      ...(p.suggestedPrice > 0 ? { price: p.suggestedPrice } : {}),
+    });
     setModalOpen(true);
   }
 
@@ -175,6 +189,8 @@ export default function SupplierProductsPage() {
           <Plus className="w-4 h-4" /> Add Product
         </Button>
       </div>
+
+      <ProductAiAssistant onUseProduct={useProposedProduct} />
 
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
