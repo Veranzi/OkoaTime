@@ -179,8 +179,9 @@ export default function NewOrderPage() {
     const cats = Array.from(new Set(selected.map((p) => p.category)));
     const supplierIds = Array.from(new Set(selected.map((p) => p.supplierId)));
 
-    const { setCategory, setSupplier } = useOrderStore.getState();
+    const { setCategory, setCategories, setSupplier } = useOrderStore.getState();
     setCategory(cats.length === 1 ? cats[0] : "mixed");
+    setCategories(cats);
     setSupplier(
       supplierIds.length === 1 ? supplierIds[0] : "",
       supplierIds.length === 1 ? (selected[0].supplierName ?? "") : ""
@@ -197,12 +198,13 @@ export default function NewOrderPage() {
       return;
     }
 
-    const { category, supplierId, supplierName } = useOrderStore.getState();
+    const { category, categories, supplierId, supplierName } = useOrderStore.getState();
     const orderData = {
       customerId: user?.uid ?? "",
       customerName: user?.name ?? "",
       customerPhone: user?.phone ?? "",
       category: category || "mixed",
+      categories: categories.length ? categories : (category ? [category] : []),
       items,
       subtotal,
       deliveryFee: deliveryFee,

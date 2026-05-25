@@ -11,6 +11,7 @@ export interface OrderItem {
 export interface NewOrderState {
   step: number;
   category: string;
+  categories: string[];
   supplierId: string;
   supplierName: string;
   items: OrderItem[];
@@ -25,6 +26,7 @@ export interface NewOrderState {
   notes: string;
   setStep: (step: number) => void;
   setCategory: (category: string) => void;
+  setCategories: (categories: string[]) => void;
   setSupplier: (supplierId: string, supplierName: string) => void;
   setItems: (items: OrderItem[]) => void;
   setDeliveryZone: (zoneId: string, type: DeliveryType, fee: number) => void;
@@ -37,6 +39,7 @@ export interface NewOrderState {
 export const useOrderStore = create<NewOrderState>()((set) => ({
   step: 1,
   category: "",
+  categories: [],
   supplierId: "",
   supplierName: "",
   items: [],
@@ -49,6 +52,7 @@ export const useOrderStore = create<NewOrderState>()((set) => ({
   notes: "",
   setStep: (step) => set({ step }),
   setCategory: (category) => set({ category }),
+  setCategories: (categories) => set({ categories }),
   setSupplier: (supplierId, supplierName) => set({ supplierId, supplierName }),
   setItems: (items) => set({ items }),
   setDeliveryZone: (deliveryZoneId, deliveryType, deliveryFee) =>
@@ -61,6 +65,7 @@ export const useOrderStore = create<NewOrderState>()((set) => ({
     set({
       step: 1,
       category: "",
+      categories: [],
       supplierId: "",
       supplierName: "",
       items: [],
