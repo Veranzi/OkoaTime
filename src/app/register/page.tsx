@@ -86,7 +86,7 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <Image src="/okoatimereallogo.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
+            <Image src="/okoatimereallogo-removebg-preview.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
             <span className="font-outfit font-bold text-xl text-navy">
               Okoa<span className="text-orange">Time</span>
             </span>

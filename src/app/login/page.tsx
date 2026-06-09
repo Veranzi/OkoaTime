@@ -90,7 +90,7 @@ export default function LoginPage() {
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4z'/%3E%3C/g%3E%3C/svg%3E")` }}
         />
         <Link href="/" className="flex items-center gap-2 relative z-10">
-          <Image src="/okoatimereallogo.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
+          <Image src="/okoatimereallogo-removebg-preview.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
           <span className="font-outfit font-bold text-2xl text-white">
             Okoa<span className="text-orange-300">Time</span>
           </span>
@@ -129,7 +129,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <Link href="/" className="lg:hidden flex items-center gap-2 justify-center mb-8">
-            <Image src="/okoatimereallogo.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
+            <Image src="/okoatimereallogo-removebg-preview.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
             <span className="font-outfit font-bold text-xl text-navy">
               Okoa<span className="text-orange">Time</span>
             </span>

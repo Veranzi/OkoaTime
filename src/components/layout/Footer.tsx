@@ -8,9 +8,15 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <Image src="/okoatimereallogo.png" alt="OkoaTime" width={96} height={52} className="rounded-xl flex-shrink-0" />
-              <span className="font-outfit font-bold text-xl text-white">
+            <div className="flex items-center gap-2.5 mb-4">
+              <Image
+                src="/okoatimereallogo-removebg-preview.png"
+                alt=""
+                width={176}
+                height={96}
+                className="h-9 w-auto flex-shrink-0"
+              />
+              <span className="font-outfit font-bold text-xl text-white tracking-tight">
                 Okoa<span className="text-orange">Time</span>
               </span>
             </div>
