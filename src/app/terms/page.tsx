@@ -80,7 +80,7 @@ export default function TermsPage() {
       <div className="bg-navy py-12 px-4">
         <div className="max-w-3xl mx-auto">
           <Link href="/" className="flex items-center gap-2 mb-6">
-            <Image src="/okoatimereallogo.png" alt="OkoaTime" width={36} height={36} className="rounded-xl" />
+            <Image src="/okoatimereallogo.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
             <span className="font-outfit font-bold text-white text-lg">Okoa<span className="text-orange">Time</span></span>
           </Link>
           <h1 className="font-outfit font-black text-white text-3xl sm:text-4xl mb-2">Terms of Service</h1>

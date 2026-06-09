@@ -59,7 +59,7 @@ export default function ReturnPolicyPage() {
       <header className="bg-navy text-white py-6 px-4">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/okoatimereallogo.png" alt="OkoaTime" width={36} height={36} className="rounded-xl" />
+            <Image src="/okoatimereallogo.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
             <span className="font-outfit font-bold text-lg">
               Okoa<span className="text-orange">Time</span>
             </span>
