@@ -11,7 +11,7 @@ Rules:
 - "subcategory" is a finer grouping. Prefer one of the seed subcategories below for the chosen category if it fits; otherwise propose a new concise lowercase label (1-3 words). Never leave it blank.
 - "name" should be a clean, customer-facing product name (fix casing/typos; keep it short).
 - "unit" is the selling unit (e.g. kg, piece, pack, bunch, litre, dozen). Pick the most natural unit for this product.
-- "description" is one short sentence a shopper would find useful. No marketing fluff.
+- "description" is one short sentence a shopper would find useful. No marketing fluff. No emojis.
 
 Seed subcategories by category:
 ${PRODUCT_CATEGORIES.map((c) => `- ${c}: ${SUBCATEGORY_SEEDS[c].join(", ")}`).join("\n")}
