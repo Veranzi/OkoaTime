@@ -130,7 +130,7 @@ export default function PortalLayout({ children, portal }: PortalLayoutProps) {
         {/* Logo */}
         <div className="flex items-center justify-between p-6 border-b border-navy-600">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/okoatiimelogoo.png" alt="OkoaTime" width={36} height={36} className="rounded-xl flex-shrink-0" />
+            <Image src="/okoatimereallogo.png" alt="OkoaTime" width={36} height={36} className="rounded-xl flex-shrink-0" />
             <div>
               <div className="font-outfit font-bold text-base text-white leading-tight">
                 Okoa<span className="text-orange">Time</span>

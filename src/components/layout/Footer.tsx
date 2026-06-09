@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <Image src="/okoatiimelogoo.png" alt="OkoaTime" width={38} height={38} className="rounded-xl flex-shrink-0" />
+              <Image src="/okoatimereallogo.png" alt="OkoaTime" width={38} height={38} className="rounded-xl flex-shrink-0" />
               <span className="font-outfit font-bold text-xl text-white">
                 Okoa<span className="text-orange">Time</span>
               </span>

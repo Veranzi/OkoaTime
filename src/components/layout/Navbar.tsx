@@ -35,7 +35,7 @@ export default function Navbar() {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/okoatiimelogoo.png" alt="OkoaTime" width={38} height={38} className="rounded-xl" />
+          <Image src="/okoatimereallogo.png" alt="OkoaTime" width={38} height={38} className="rounded-xl" />
           <span className={cn("font-outfit font-bold text-xl", isScrolled ? "text-navy" : "text-white")}>
             Okoa<span className="text-orange">Time</span>
           </span>
