@@ -131,14 +131,14 @@ export default function PortalLayout({ children, portal }: PortalLayoutProps) {
         <div className="flex items-center justify-between p-6 border-b border-navy-600">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
-              src="/okoatimereallogo-removebg-preview.png"
+              src="/okoatimereallogo-light.png"
               alt=""
               width={176}
               height={96}
-              className="h-8 w-auto flex-shrink-0"
+              className="h-10 w-auto flex-shrink-0"
             />
             <div>
-              <div className="font-outfit font-bold text-base text-white leading-tight tracking-tight">
+              <div className="font-outfit font-bold text-lg text-white leading-tight tracking-tight">
                 Okoa<span className="text-orange">Time</span>
               </div>
               <div className="text-navy-300 text-xs font-josefin">{portalTitles[portal]}</div>

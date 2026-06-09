@@ -36,14 +36,14 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
           <Image
-            src="/okoatimereallogo-removebg-preview.png"
+            src={isScrolled ? "/okoatimereallogo-removebg-preview.png" : "/okoatimereallogo-light.png"}
             alt=""
             width={176}
             height={96}
             priority
-            className="h-9 w-auto"
+            className="h-11 w-auto"
           />
-          <span className={cn("font-outfit font-bold text-xl tracking-tight", isScrolled ? "text-navy" : "text-white")}>
+          <span className={cn("font-outfit font-bold text-2xl tracking-tight", isScrolled ? "text-navy" : "text-white")}>
             Okoa<span className="text-orange">Time</span>
           </span>
         </Link>

@@ -10,13 +10,13 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
               <Image
-                src="/okoatimereallogo-removebg-preview.png"
+                src="/okoatimereallogo-light.png"
                 alt=""
                 width={176}
                 height={96}
-                className="h-9 w-auto flex-shrink-0"
+                className="h-12 w-auto flex-shrink-0"
               />
-              <span className="font-outfit font-bold text-xl text-white tracking-tight">
+              <span className="font-outfit font-bold text-2xl text-white tracking-tight">
                 Okoa<span className="text-orange">Time</span>
               </span>
             </div>
