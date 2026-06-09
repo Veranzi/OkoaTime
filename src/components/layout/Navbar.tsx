@@ -34,11 +34,15 @@ export default function Navbar() {
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/okoatimereallogo.png" alt="OkoaTime" width={96} height={52} className="rounded-xl" />
-          <span className={cn("font-outfit font-bold text-xl", isScrolled ? "text-navy" : "text-white")}>
-            Okoa<span className="text-orange">Time</span>
-          </span>
+        <Link href="/" className="flex items-center" aria-label="OkoaTime — home">
+          <Image
+            src="/okoatimereallogo-removebg-preview.png"
+            alt="OkoaTime"
+            width={176}
+            height={96}
+            priority
+            className="h-12 w-auto"
+          />
         </Link>
 
         {/* Desktop Nav */}
