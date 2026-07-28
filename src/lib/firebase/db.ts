@@ -55,7 +55,7 @@ export interface Order {
   deliveryLng?: number;
   notes?: string;
   paymentMethod: "mpesa" | "cash";
-  paymentStatus: "pending" | "paid";
+  paymentStatus: "pending" | "paid" | "failed";
   status: OrderStatus;
   deliveryType?: DeliveryType;
   supplierId?: string;
@@ -221,17 +221,27 @@ export async function updateUserDoc(uid: string, data: Record<string, unknown>):
 }
 
 // ── Payment ────────────────────────────────────────────────────────────────
+// Canonical shape lives in src/payments/models/payment.model.ts (server-side,
+// written exclusively by the Payments module). This mirror is for admin UI
+// display only — the client SDK cannot write to `payments` (see firestore.rules).
+
+export type PaymentStatus = "INITIATED" | "PENDING" | "COMPLETED" | "FAILED" | "TIMEOUT";
 
 export interface Payment {
   id: string;
-  checkoutRequestId: string;
   orderId: string;
+  customerId: string;
   phone: string;
   amount: number;
-  status: "pending" | "completed" | "failed";
+  status: PaymentStatus;
+  environment: "sandbox" | "production";
+  checkoutRequestId?: string;
+  merchantRequestId?: string;
   mpesaReceiptNumber?: string;
-  failureReason?: string;
+  resultCode?: number;
+  resultDesc?: string;
   createdAt: unknown;
+  updatedAt?: unknown;
 }
 
 export async function getAllPayments(): Promise<Payment[]> {

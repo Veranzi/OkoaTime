@@ -30,7 +30,7 @@ export default function AdminDashboard() {
     getAllUsers().then(setUsers).catch(() => {});
     getAllOrders().then(setOrders).catch(() => {});
     getAllPayments()
-      .then((p) => setTotalRevenue(p.filter((x) => x.status === "completed").reduce((s, x) => s + x.amount, 0)))
+      .then((p) => setTotalRevenue(p.filter((x) => x.status === "COMPLETED").reduce((s, x) => s + x.amount, 0)))
       .catch(() => {});
   }, []);
 

@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { getPaymentStatus } from "@/payments/controller/payment.controller";
+import { exportPaymentsHandler } from "@/payments/controller/payment.controller";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  return getPaymentStatus(req);
+  return exportPaymentsHandler(req);
 }

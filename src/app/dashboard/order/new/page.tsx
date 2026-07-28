@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, Refresh
 import { SERVICE_CATEGORIES, formatKES, toMpesaPhone } from "@/lib/utils";
 import { useOrderStore } from "@/lib/store/useOrderStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { createOrder, updateOrder, getAvailableProducts } from "@/lib/firebase/db";
+import { createOrder, getAvailableProducts } from "@/lib/firebase/db";
 import type { Product } from "@/lib/firebase/db";
 import type { DeliveryType } from "@/lib/firebase/db";
 import { auth } from "@/lib/firebase/config";
@@ -47,7 +47,6 @@ export default function NewOrderPage() {
   type PaymentStatus = "idle" | "sending" | "awaiting" | "confirmed" | "failed" | "timeout";
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
   const [checkoutRequestId, setCheckoutRequestId] = useState("");
-  const [orderDocId, setOrderDocId] = useState("");
   const [mpesaReceipt, setMpesaReceipt] = useState("");
   const [failureReason, setFailureReason] = useState("");
   const [countdown, setCountdown] = useState(90);
@@ -67,16 +66,19 @@ export default function NewOrderPage() {
 
     pollRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/payments/mpesa/status?checkoutRequestId=${checkoutRequestId}`);
+        if (!auth.currentUser) return;
+        const idToken = await auth.currentUser.getIdToken();
+        const res = await fetch(`/api/payments/mpesa/status?checkoutRequestId=${checkoutRequestId}`, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
         const data = await res.json() as { status: string; mpesaReceiptNumber?: string; failureReason?: string };
         if (data.status === "completed") {
           clearInterval(pollRef.current!);
           clearInterval(countdownRef.current!);
           setMpesaReceipt(data.mpesaReceiptNumber ?? "");
           setPaymentStatus("confirmed");
-          if (orderDocId) {
-            updateOrder(orderDocId, { paymentStatus: "paid" }).catch(() => {});
-          }
+          // order.paymentStatus is set server-side by the Payments module's
+          // M-Pesa callback — the client never writes payment outcomes directly.
           setTimeout(() => { reset(); router.push("/dashboard/orders"); }, 3500);
         } else if (data.status === "failed") {
           clearInterval(pollRef.current!);
@@ -193,7 +195,8 @@ export default function NewOrderPage() {
 
   async function handlePayment() {
     // Ensure Firebase Auth token is ready before writing to Firestore
-    if (!auth.currentUser) {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) {
       toast.error("Session loading — please wait a moment and try again.");
       return;
     }
@@ -236,14 +239,18 @@ export default function NewOrderPage() {
     setPaymentStatus("sending");
     try {
       const docId = await createOrder(orderData);
-      setOrderDocId(docId);
 
+      const idToken = await firebaseUser.getIdToken();
       const res = await fetch("/api/payments/mpesa/stkpush", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        // Amount is never trusted from the client — the Payments module
+        // always charges the server-side order total.
         body: JSON.stringify({
           phone: toMpesaPhone(phone || user?.phone || ""),
-          amount: total,
           orderId: docId,
         }),
       });
