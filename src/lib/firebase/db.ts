@@ -54,7 +54,7 @@ export interface Order {
   deliveryLat?: number;
   deliveryLng?: number;
   notes?: string;
-  paymentMethod: "mpesa" | "cash";
+  paymentMethod: "mpesa" | "till";
   paymentStatus: "pending" | "paid" | "failed";
   status: OrderStatus;
   deliveryType?: DeliveryType;

@@ -124,7 +124,7 @@ export default function AdminPaymentsPage() {
 
   const paid = orders.filter(isPaid);
   const mpesa = paid.filter((o) => o.paymentMethod === "mpesa");
-  const cash  = paid.filter((o) => o.paymentMethod === "cash");
+  const till  = paid.filter((o) => o.paymentMethod === "till");
 
   const totalRevenue    = paid.reduce((s, o) => s + o.total, 0);
   const totalItemComm   = paid.reduce((s, o) => s + Math.round(o.subtotal * ITEM_COMM), 0);
@@ -177,10 +177,10 @@ export default function AdminPaymentsPage() {
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-1">
             <Banknote className="w-4 h-4 text-blue-500" />
-            <p className="font-josefin text-xs text-gray-400">Cash on Delivery</p>
+            <p className="font-josefin text-xs text-gray-400">Pay via Till</p>
           </div>
-          <p className="font-outfit font-black text-2xl text-navy">{formatKES(cash.reduce((s, o) => s + o.total, 0))}</p>
-          <p className="font-josefin text-gray-400 text-xs mt-1">{cash.length} orders</p>
+          <p className="font-outfit font-black text-2xl text-navy">{formatKES(till.reduce((s, o) => s + o.total, 0))}</p>
+          <p className="font-josefin text-gray-400 text-xs mt-1">{till.length} orders</p>
         </div>
       </div>
 
@@ -215,7 +215,7 @@ export default function AdminPaymentsPage() {
                       <td className="p-4 font-josefin text-gray-500 text-xs whitespace-nowrap">{o.supplierName ?? "—"}</td>
                       <td className="p-4">
                         <Badge variant={o.paymentMethod === "mpesa" ? "green" : "blue"}>
-                          {o.paymentMethod === "mpesa" ? "M-Pesa" : "Cash"}
+                          {o.paymentMethod === "mpesa" ? "M-Pesa" : "Till"}
                         </Badge>
                       </td>
                       <td className="p-4 font-outfit font-semibold text-navy">{formatKES(o.subtotal)}</td>

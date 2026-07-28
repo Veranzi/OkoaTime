@@ -5,7 +5,7 @@ export interface OrderRecord {
   id: string;
   customerId: string;
   total: number;
-  paymentMethod: "mpesa" | "cash";
+  paymentMethod: "mpesa" | "till";
   paymentStatus: "pending" | "paid" | "failed";
   phone?: string | null;
   customerPhone?: string;

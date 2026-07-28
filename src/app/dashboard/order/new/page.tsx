@@ -221,14 +221,14 @@ export default function NewOrderPage() {
       ...(supplierId ? { supplierId, supplierName } : {}),
     };
 
-    if (paymentMethod === "cash") {
+    if (paymentMethod === "till") {
       try {
         await createOrder(orderData);
-        toast.success("Order placed! Pay cash on delivery.");
+        toast.success("Order placed! Pay via the Till Number shown on your orders page.");
         reset();
         router.push("/dashboard/orders");
       } catch (err) {
-        console.error("Cash order error:", err);
+        console.error("Till order error:", err);
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(msg.includes("permission") ? "Session expired — please sign in again." : "Failed to place order. Try again.");
       }
@@ -821,15 +821,27 @@ export default function NewOrderPage() {
                   >
                     <RefreshCw className="w-4 h-4" /> Try Again
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="md"
-                    className="w-full"
-                    onClick={() => setPayment("cash", phone)}
-                  >
-                    💵 Switch to Cash on Delivery
-                  </Button>
                 </div>
+
+                {process.env.NEXT_PUBLIC_MPESA_TILL_NUMBER && (
+                  <div className="mt-6 text-left bg-gray-50 border border-gray-200 rounded-2xl p-4">
+                    <p className="font-outfit font-bold text-navy text-sm mb-3">
+                      Or pay manually via M-Pesa Till
+                    </p>
+                    <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 mb-3">
+                      <span className="font-josefin text-gray-500 text-xs">Till Number</span>
+                      <span className="font-outfit font-black text-navy text-lg tracking-wide">
+                        {process.env.NEXT_PUBLIC_MPESA_TILL_NUMBER}
+                      </span>
+                    </div>
+                    <ol className="font-josefin text-gray-600 text-xs space-y-1.5 list-decimal list-inside">
+                      <li>Go to M-Pesa on your phone &rarr; Lipa na M-Pesa &rarr; Buy Goods and Services</li>
+                      <li>Enter Till Number: <span className="font-semibold text-navy">{process.env.NEXT_PUBLIC_MPESA_TILL_NUMBER}</span></li>
+                      <li>Enter Amount: <span className="font-semibold text-navy">{formatKES(total)}</span></li>
+                      <li>Enter your M-Pesa PIN and confirm</li>
+                    </ol>
+                  </div>
+                )}
               </div>
             )}
 
@@ -845,7 +857,7 @@ export default function NewOrderPage() {
 
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
-                    {(["mpesa", "cash"] as const).map((method) => (
+                    {(["mpesa", "till"] as const).map((method) => (
                       <button
                         key={method}
                         onClick={() => setPayment(method, phone)}
@@ -855,12 +867,12 @@ export default function NewOrderPage() {
                             : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
-                        <div className="text-2xl mb-1">{method === "mpesa" ? "📱" : "💵"}</div>
+                        <div className="text-2xl mb-1">{method === "mpesa" ? "📱" : "🏪"}</div>
                         <p className="font-outfit font-bold text-navy text-sm">
-                          {method === "mpesa" ? "M-Pesa" : "Cash on Delivery"}
+                          {method === "mpesa" ? "M-Pesa" : "Pay with Till"}
                         </p>
                         <p className="font-josefin text-gray-400 text-xs mt-0.5">
-                          {method === "mpesa" ? "STK Push to your phone" : "Pay when delivered"}
+                          {method === "mpesa" ? "STK Push to your phone" : "Pay via Till Number"}
                         </p>
                       </button>
                     ))}
@@ -874,6 +886,23 @@ export default function NewOrderPage() {
                       defaultValue={user?.phone}
                       onChange={(e) => setPayment("mpesa", e.target.value)}
                     />
+                  )}
+
+                  {paymentMethod === "till" && process.env.NEXT_PUBLIC_MPESA_TILL_NUMBER && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+                      <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 mb-3">
+                        <span className="font-josefin text-gray-500 text-xs">Till Number</span>
+                        <span className="font-outfit font-black text-navy text-lg tracking-wide">
+                          {process.env.NEXT_PUBLIC_MPESA_TILL_NUMBER}
+                        </span>
+                      </div>
+                      <ol className="font-josefin text-gray-600 text-xs space-y-1.5 list-decimal list-inside">
+                        <li>Go to M-Pesa on your phone &rarr; Lipa na M-Pesa &rarr; Buy Goods and Services</li>
+                        <li>Enter Till Number: <span className="font-semibold text-navy">{process.env.NEXT_PUBLIC_MPESA_TILL_NUMBER}</span></li>
+                        <li>Enter Amount: <span className="font-semibold text-navy">{formatKES(total)}</span></li>
+                        <li>Enter your M-Pesa PIN and confirm</li>
+                      </ol>
+                    </div>
                   )}
 
                   <div className="bg-orange-50 rounded-2xl p-4">
@@ -890,7 +919,7 @@ export default function NewOrderPage() {
                     onClick={handlePayment}
                   >
                     <CreditCard className="w-4 h-4" />
-                    {paymentMethod === "mpesa" ? "Pay with M-Pesa" : "Place Order (Cash)"}
+                    {paymentMethod === "mpesa" ? "Pay with M-Pesa" : "Place Order (Pay via Till)"}
                   </Button>
 
                   {paymentMethod === "mpesa" && (

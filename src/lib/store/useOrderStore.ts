@@ -21,7 +21,7 @@ export interface NewOrderState {
   deliveryAddress: string;
   deliveryLat?: number;
   deliveryLng?: number;
-  paymentMethod: "mpesa" | "cash";
+  paymentMethod: "mpesa" | "till";
   phone: string;
   notes: string;
   setStep: (step: number) => void;
@@ -31,7 +31,7 @@ export interface NewOrderState {
   setItems: (items: OrderItem[]) => void;
   setDeliveryZone: (zoneId: string, type: DeliveryType, fee: number) => void;
   setDelivery: (address: string, lat?: number, lng?: number) => void;
-  setPayment: (method: "mpesa" | "cash", phone: string) => void;
+  setPayment: (method: "mpesa" | "till", phone: string) => void;
   setNotes: (notes: string) => void;
   reset: () => void;
 }

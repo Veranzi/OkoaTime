@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       deliveryFee,
       deliveryAddress,
       paymentMethod,
-      paymentStatus: paymentMethod === "cash" ? "pending" : "initiated",
+      paymentStatus: paymentMethod === "till" ? "pending" : "initiated",
       phone: phone ?? null,
       notes: notes ?? "",
       createdAt: FieldValue.serverTimestamp(),
