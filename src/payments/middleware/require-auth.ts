@@ -14,7 +14,11 @@ export async function requireAuth(req: NextRequest): Promise<AuthContext> {
   try {
     const decoded = await adminAuth.verifyIdToken(token);
     return { uid: decoded.uid };
-  } catch {
+  } catch (err) {
+    // Logged server-side (not exposed to the client) so a config problem
+    // (e.g. missing/mismatched FIREBASE_ADMIN_SDK_KEY) is distinguishable
+    // from an actually-expired token when reading deployment logs.
+    console.error("requireAuth: verifyIdToken failed:", err instanceof Error ? err.message : err);
     throw new PaymentError("Invalid or expired session — please sign in again", 401);
   }
 }
