@@ -45,10 +45,10 @@ export async function submitStkPush(params: {
     TransactionType: mpesaEnv.transactionType,
     Amount: Math.ceil(amount),
     PartyA: phone,
-    // PartyB must equal BusinessShortCode for a standard Paybill STK push —
-    // Daraja only issues one shortcode here, there's no separate till/store
-    // number to configure. Using anything else gets rejected as a mismatch.
-    PartyB: mpesaEnv.shortcode,
+    // PartyB is the actual Till Number customers pay to — distinct from
+    // BusinessShortCode, which is the API credential used to authenticate
+    // and generate the password.
+    PartyB: mpesaEnv.tillNumber,
     PhoneNumber: phone,
     CallBackURL: mpesaEnv.callbackUrl,
     AccountReference: orderId,

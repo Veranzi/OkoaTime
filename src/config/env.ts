@@ -21,11 +21,19 @@ export const mpesaEnv = {
   get consumerSecret() {
     return required("MPESA_CONSUMER_SECRET");
   },
+  // The API shortcode Safaricom issues for Daraja auth (BusinessShortCode +
+  // password generation). Can differ from the public till number below.
   get shortcode() {
     return required("MPESA_SHORTCODE");
   },
   get passkey() {
     return required("MPESA_PASSKEY");
+  },
+  // The actual Till Number customers pay to (PartyB) — kept distinct from
+  // the API shortcode above, since Safaricom can issue these as two
+  // different numbers for the same till.
+  get tillNumber() {
+    return required("MPESA_TILL_NUMBER");
   },
   get transactionType() {
     // Defaults to Buy Goods (Till) — override with MPESA_TRANSACTION_TYPE=
