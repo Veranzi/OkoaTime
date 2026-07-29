@@ -1,7 +1,8 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   sendPasswordResetEmail,
@@ -71,8 +72,22 @@ export async function loginUser(email: string, password: string) {
   return user;
 }
 
+// Popup-based Google sign-in (signInWithPopup) relies on the opener window
+// polling the popup's `.closed` state — Chrome's Cross-Origin-Opener-Policy
+// enforcement on Google's own accounts.google.com pages blocks that even
+// when our page sets a permissive COOP header, leaving the popup flow
+// hanging silently. signInWithRedirect avoids the popup entirely: it
+// navigates the whole page to Google and back, so there's no cross-window
+// reference to be blocked.
 export async function loginWithGoogle() {
-  const { user } = await signInWithPopup(auth, googleProvider);
+  await signInWithRedirect(auth, googleProvider);
+}
+
+/** Call on mount of any page that renders the Google sign-in button, to pick up the result after the redirect back. */
+export async function completeGoogleRedirect() {
+  const result = await getRedirectResult(auth);
+  if (!result) return null;
+  const { user } = result;
 
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);

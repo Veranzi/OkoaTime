@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -8,7 +8,7 @@ import { z } from "zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Image from "next/image";
-import { loginUser, loginWithGoogle, getUserProfile, getRoleRedirect, resetPassword, setSessionCookie } from "@/lib/firebase/auth";
+import { loginUser, loginWithGoogle, completeGoogleRedirect, getUserProfile, getRoleRedirect, resetPassword, setSessionCookie } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -39,6 +39,30 @@ export default function LoginPage() {
     router.push(redirect ?? getRoleRedirect(role));
   }
 
+  // Picks up the result after Google redirects back to this page.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const firebaseUser = await completeGoogleRedirect();
+        if (!firebaseUser || cancelled) return;
+        setGoogleLoading(true);
+        const profile = await getUserProfile(firebaseUser.uid);
+        if (!profile) throw new Error("Profile not found");
+        setUser(profile);
+        setSessionCookie();
+        toast.success(`Welcome, ${profile.name}!`);
+        redirectAfterLogin(profile.role);
+      } catch {
+        if (!cancelled) toast.error("Google sign-in failed. Try again.");
+      } finally {
+        if (!cancelled) setGoogleLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function onSubmit(data: FormData) {
     try {
       const firebaseUser = await loginUser(data.email, data.password);
@@ -57,16 +81,12 @@ export default function LoginPage() {
   async function handleGoogle() {
     setGoogleLoading(true);
     try {
-      const firebaseUser = await loginWithGoogle();
-      const profile = await getUserProfile(firebaseUser.uid);
-      if (!profile) throw new Error("Profile not found");
-      setUser(profile);
-      setSessionCookie();
-      toast.success(`Welcome, ${profile.name}!`);
-      redirectAfterLogin(profile.role);
+      // Navigates the whole page to Google — nothing here runs after this
+      // resolves. The result is picked up by the useEffect above once
+      // Google redirects back to this same page.
+      await loginWithGoogle();
     } catch {
       toast.error("Google sign-in failed. Try again.");
-    } finally {
       setGoogleLoading(false);
     }
   }
