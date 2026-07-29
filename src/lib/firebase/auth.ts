@@ -35,6 +35,9 @@ export interface UserProfile {
 }
 
 const googleProvider = new GoogleAuthProvider();
+// Force the account chooser every time, instead of Google silently
+// re-using whichever account is already signed into the browser.
+googleProvider.setCustomParameters({ prompt: "select_account" });
 
 export async function registerUser(data: {
   name: string;
