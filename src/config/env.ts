@@ -28,7 +28,9 @@ export const mpesaEnv = {
     return required("MPESA_PASSKEY");
   },
   get transactionType() {
-    return optional("MPESA_TRANSACTION_TYPE", "CustomerPayBillOnline");
+    // Defaults to Buy Goods (Till) — override with MPESA_TRANSACTION_TYPE=
+    // CustomerPayBillOnline if a Paybill shortcode is ever used instead.
+    return optional("MPESA_TRANSACTION_TYPE") || "CustomerBuyGoodsOnline";
   },
   get callbackUrl() {
     return required("MPESA_CALLBACK_URL");
