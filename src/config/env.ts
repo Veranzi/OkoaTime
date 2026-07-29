@@ -27,12 +27,6 @@ export const mpesaEnv = {
   get passkey() {
     return required("MPESA_PASSKEY");
   },
-  get tillNumber() {
-    // A blank env var (set but empty, as the .env.local.example template
-    // shows) must still fall back to the shortcode — `??` alone doesn't
-    // catch that since "" is neither null nor undefined.
-    return optional("MPESA_TILL_NUMBER") || this.shortcode;
-  },
   get transactionType() {
     return optional("MPESA_TRANSACTION_TYPE", "CustomerPayBillOnline");
   },
