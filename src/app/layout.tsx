@@ -3,6 +3,7 @@ import { Outfit, Josefin_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import AuthProvider from "@/components/providers/AuthProvider";
+import IdleLockProvider from "@/components/providers/IdleLockProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -55,7 +56,9 @@ export default function RootLayout({
     <html lang="en" className={`${outfit.variable} ${josefinSans.variable}`}>
       <body className="font-josefin antialiased bg-white text-navy">
         <AuthProvider>
-          {children}
+          <IdleLockProvider>
+            {children}
+          </IdleLockProvider>
         </AuthProvider>
         <Toaster
           position="top-right"

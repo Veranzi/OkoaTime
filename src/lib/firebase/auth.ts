@@ -2,8 +2,11 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithRedirect,
+  reauthenticateWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   signOut,
   sendPasswordResetEmail,
   updateProfile,
@@ -141,4 +144,43 @@ export function getRoleRedirect(role: UserRole): string {
     admin: "/admin",
   };
   return map[role];
+}
+
+// ── Inactivity lock screen — confirms it's still the signed-in user without
+// disturbing their session (no logout, no re-fetching their data) ─────────
+
+/** Whether the current user can unlock with a password (vs. Google-only accounts). */
+export function hasPasswordProvider(): boolean {
+  return auth.currentUser?.providerData.some((p) => p.providerId === "password") ?? false;
+}
+
+export async function unlockWithPassword(password: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user?.email) throw new Error("No signed-in user");
+  await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+}
+
+const UNLOCK_REDIRECT_PENDING_KEY = "okoatime_unlock_pending";
+
+/** For Google-only accounts — same COOP-hang problem as sign-in, so use redirect here too. */
+export async function unlockWithGoogleRedirect(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("No signed-in user");
+  sessionStorage.setItem(UNLOCK_REDIRECT_PENDING_KEY, "1");
+  await reauthenticateWithRedirect(user, googleProvider);
+}
+
+/**
+ * Call on app mount to pick up the result of an unlockWithGoogleRedirect()
+ * round-trip. Gated on the sessionStorage flag so this never races with
+ * completeGoogleRedirect() consuming the SAME redirect result on the login
+ * page for an actual sign-in.
+ */
+export async function completeUnlockRedirect(): Promise<boolean> {
+  if (typeof window === "undefined" || sessionStorage.getItem(UNLOCK_REDIRECT_PENDING_KEY) !== "1") {
+    return false;
+  }
+  sessionStorage.removeItem(UNLOCK_REDIRECT_PENDING_KEY);
+  const result = await getRedirectResult(auth);
+  return !!result;
 }
