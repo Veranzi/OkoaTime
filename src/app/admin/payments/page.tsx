@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import { getAllOrders, tsToDate } from "@/lib/firebase/db";
 import type { Order, Payment, PaymentStatus } from "@/lib/firebase/db";
 import { auth } from "@/lib/firebase/config";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 
 const PAYMENT_STATUS_BADGE: Record<PaymentStatus, "green" | "yellow" | "red" | "orange" | "gray"> = {
   INITIATED: "gray",
@@ -31,6 +32,7 @@ function isPaid(o: Order) {
 }
 
 export default function AdminPaymentsPage() {
+  const { loading: authLoading } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +79,13 @@ export default function AdminPaymentsPage() {
     }
   }
 
-  useEffect(() => { loadPayments(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Wait for Firebase Auth to finish restoring the session before firing the
+  // first request — auth.currentUser is null for a brief moment on page
+  // load, which would otherwise send this with no Authorization header.
+  useEffect(() => {
+    if (authLoading) return;
+    loadPayments();
+  }, [authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleExportCsv() {
     try {
