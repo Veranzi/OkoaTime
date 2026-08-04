@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import type { Content } from "@google/genai";
+import { GeminiApiError, getGeminiClient, getGeminiModel, imageUrlToPart } from "@/lib/gemini";
 import { PRODUCT_CATEGORIES, SUBCATEGORY_SEEDS } from "@/lib/utils";
-
-const MODEL = "claude-sonnet-4-6";
 
 const SYSTEM_PROMPT = `You are the product-cataloguing assistant for suppliers on OkoaTime, a delivery marketplace in Lamu, Kenya. Suppliers chat with you to list what they sell. They may type what they have or send a photo of their stock.
 
@@ -23,33 +22,30 @@ ${PRODUCT_CATEGORIES.map((c) => `- ${c}: ${SUBCATEGORY_SEEDS[c].join(", ")}`).jo
 
 Identify what's in any photo even if the supplier types nothing. Trust the photo for what the item is.`;
 
-const RESPONSE_SCHEMA = {
-  type: "json_schema" as const,
-  schema: {
-    type: "object",
-    properties: {
-      reply: { type: "string", description: "Conversational reply to the supplier" },
-      products: {
-        type: "array",
-        description: "Proposed products detected this turn (empty if none)",
-        items: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-            category: { type: "string", enum: [...PRODUCT_CATEGORIES] },
-            subcategory: { type: "string" },
-            unit: { type: "string" },
-            suggestedPrice: { type: "number", description: "Estimated price in KES, 0 if unsure" },
-            description: { type: "string" },
-          },
-          required: ["name", "category", "subcategory", "unit", "suggestedPrice", "description"],
-          additionalProperties: false,
+const RESPONSE_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    reply: { type: "string", description: "Conversational reply to the supplier" },
+    products: {
+      type: "array",
+      description: "Proposed products detected this turn (empty if none)",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          category: { type: "string", enum: [...PRODUCT_CATEGORIES] },
+          subcategory: { type: "string" },
+          unit: { type: "string" },
+          suggestedPrice: { type: "number", description: "Estimated price in KES, 0 if unsure" },
+          description: { type: "string" },
         },
+        required: ["name", "category", "subcategory", "unit", "suggestedPrice", "description"],
+        additionalProperties: false,
       },
     },
-    required: ["reply", "products"],
-    additionalProperties: false,
   },
+  required: ["reply", "products"],
+  additionalProperties: false,
 };
 
 interface ChatTurn {
@@ -59,8 +55,7 @@ interface ChatTurn {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ error: "AI assistant not configured" }, { status: 500 });
   }
 
@@ -76,40 +71,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Send a message or a photo" }, { status: 400 });
   }
 
-  const messages: Anthropic.MessageParam[] = turns.map((m) => {
-    if (m.role === "assistant") {
-      return { role: "assistant", content: m.text ?? "" };
-    }
-    const content: Anthropic.ContentBlockParam[] = [];
-    if (m.imageUrl) content.push({ type: "image", source: { type: "url", url: m.imageUrl } });
-    content.push({ type: "text", text: m.text?.trim() || "Look at this photo of my stock." });
-    return { role: "user", content };
-  });
-
-  const client = new Anthropic({ apiKey });
+  let contents: Content[];
+  try {
+    contents = await Promise.all(
+      turns.map(async (m): Promise<Content> => {
+        if (m.role === "assistant") {
+          return { role: "model", parts: [{ text: m.text ?? "" }] };
+        }
+        const parts: Content["parts"] = [];
+        if (m.imageUrl) parts.push(await imageUrlToPart(m.imageUrl));
+        parts.push({ text: m.text?.trim() || "Look at this photo of my stock." });
+        return { role: "user", parts };
+      })
+    );
+  } catch (err) {
+    console.error("assistant image fetch error:", err);
+    return NextResponse.json({ error: "Could not read the attached photo" }, { status: 400 });
+  }
 
   try {
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
-      thinking: { type: "disabled" },
-      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-      output_config: { format: RESPONSE_SCHEMA, effort: "low" },
-      messages,
+    const response = await getGeminiClient().models.generateContent({
+      model: getGeminiModel(),
+      contents,
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+        responseJsonSchema: RESPONSE_JSON_SCHEMA,
+        maxOutputTokens: 1024,
+      },
     });
 
-    const textBlock = response.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
+    if (!response.text) {
       return NextResponse.json({ error: "No reply returned" }, { status: 502 });
     }
-    const parsed = JSON.parse(textBlock.text) as Record<string, unknown>;
+    const parsed = JSON.parse(response.text) as Record<string, unknown>;
     return NextResponse.json(parsed);
   } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) {
-      return NextResponse.json({ error: "AI service authentication failed" }, { status: 500 });
-    }
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: "AI service is busy — try again shortly" }, { status: 429 });
+    if (err instanceof GeminiApiError) {
+      if (err.status === 401 || err.status === 403) {
+        return NextResponse.json({ error: "AI service authentication failed" }, { status: 500 });
+      }
+      if (err.status === 429) {
+        return NextResponse.json({ error: "AI service is busy — try again shortly" }, { status: 429 });
+      }
     }
     console.error("assistant error:", err);
     return NextResponse.json({ error: "Assistant failed" }, { status: 500 });
