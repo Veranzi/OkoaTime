@@ -83,6 +83,25 @@ export async function handleMpesaCallback(req: NextRequest): Promise<NextRespons
   return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" });
 }
 
+/**
+ * Firestore Timestamp objects (createdAt/updatedAt) serialize over JSON as
+ * `{_seconds, _nanoseconds}`, not the live object with a `.toDate()` method —
+ * the admin UI's date formatting crashes the whole page render on that shape.
+ * Convert to ISO strings before responding.
+ */
+function toTimestampIso(value: unknown): string | undefined {
+  const ts = value as { toDate?: () => Date } | undefined;
+  return typeof ts?.toDate === "function" ? ts.toDate().toISOString() : undefined;
+}
+
+function serializePayment(payment: Payment): Payment {
+  return {
+    ...payment,
+    createdAt: toTimestampIso(payment.createdAt) ?? null,
+    updatedAt: toTimestampIso(payment.updatedAt) ?? null,
+  };
+}
+
 export async function queryPaymentStatus(req: NextRequest): Promise<NextResponse> {
   try {
     await requireAdmin(req);
@@ -93,7 +112,7 @@ export async function queryPaymentStatus(req: NextRequest): Promise<NextResponse
     }
 
     const payment = await retryStatusQuery(parsed.data.paymentId);
-    return NextResponse.json({ success: true, payment });
+    return NextResponse.json({ success: true, payment: serializePayment(payment) });
   } catch (err) {
     return errorResponse(err);
   }
@@ -114,7 +133,7 @@ export async function listPaymentsHandler(req: NextRequest): Promise<NextRespons
     await requireAdmin(req);
     const filters = parseListFilters(req);
     const payments = await listPayments(filters);
-    return NextResponse.json({ success: true, payments });
+    return NextResponse.json({ success: true, payments: payments.map(serializePayment) });
   } catch (err) {
     return errorResponse(err);
   }
@@ -123,11 +142,6 @@ export async function listPaymentsHandler(req: NextRequest): Promise<NextRespons
 function toCsvValue(value: unknown): string {
   const str = value === null || value === undefined ? "" : String(value);
   return `"${str.replace(/"/g, '""')}"`;
-}
-
-function paymentCreatedAtIso(payment: Payment): string {
-  const createdAt = payment.createdAt as { toDate?: () => Date } | undefined;
-  return typeof createdAt?.toDate === "function" ? createdAt.toDate().toISOString() : "";
 }
 
 export async function exportPaymentsHandler(req: NextRequest): Promise<NextResponse> {
@@ -159,7 +173,7 @@ export async function exportPaymentsHandler(req: NextRequest): Promise<NextRespo
         p.checkoutRequestId ?? "",
         p.mpesaReceiptNumber ?? "",
         p.resultDesc ?? "",
-        paymentCreatedAtIso(p),
+        toTimestampIso(p.createdAt) ?? "",
       ]
         .map(toCsvValue)
         .join(",")
