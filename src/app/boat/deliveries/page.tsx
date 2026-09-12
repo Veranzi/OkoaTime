@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { Phone, RefreshCw, MapPin, Package, Check } from "lucide-react";
+import { Phone, RefreshCw, MapPin, Package, Check, Sailboat } from "lucide-react";
 import Button from "@/components/ui/Button";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 import Badge from "@/components/ui/Badge";
@@ -148,7 +148,7 @@ export default function BoatDeliveriesPage() {
             zoom={14}
           />
           <div className="absolute top-3 right-3 bg-navy text-white text-xs px-2 py-1 rounded-lg font-outfit font-bold flex items-center gap-1">
-            <span className="w-2 h-2 bg-teal rounded-full animate-pulse" /> ⛵ Live
+            <span className="w-2 h-2 bg-teal rounded-full animate-pulse" /> <Sailboat className="w-3.5 h-3.5" /> Live
           </div>
         </div>
       )}
@@ -157,7 +157,7 @@ export default function BoatDeliveriesPage() {
         <div className="space-y-4">{[1, 2].map((i) => <div key={i} className="card animate-pulse h-36 bg-gray-50" />)}</div>
       ) : orders.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">⛵</p>
+          <Sailboat className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="font-outfit font-bold text-navy mb-1">
             {tab === "available" ? "No deliveries waiting" : "No active deliveries"}
           </p>
@@ -218,7 +218,7 @@ export default function BoatDeliveriesPage() {
 
               {tab === "active" && order.status === "boat_assigned" && (
                 <Button variant="teal" size="sm" className="w-full" onClick={() => advanceStatus(order)}>
-                  ⛵ Start Water Delivery
+                  <Sailboat className="w-3.5 h-3.5" /> Start Water Delivery
                 </Button>
               )}
 

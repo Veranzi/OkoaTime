@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { Store } from "lucide-react";
 
 export default function SupplierProfilePage() {
   const { user } = useAuthStore();
@@ -37,8 +38,8 @@ export default function SupplierProfilePage() {
           <h3 className="font-outfit font-bold text-navy mb-2">Business Information</h3>
 
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-            <div className="w-16 h-16 bg-orange rounded-2xl flex items-center justify-center text-3xl">
-              🏪
+            <div className="w-16 h-16 bg-orange rounded-2xl flex items-center justify-center">
+              <Store className="w-8 h-8 text-white" />
             </div>
             <div>
               <Button variant="outline" size="sm" type="button">Upload Shop Photo</Button>

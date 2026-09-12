@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Phone, MessageCircle, Check, ArrowLeft } from "lucide-react";
+import { Phone, MessageCircle, Check, ArrowLeft, Search, Bike, Sailboat, MapPin } from "lucide-react";
 import Button from "@/components/ui/Button";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 import { listenToOrder, updateOrderStatus } from "@/lib/firebase/db";
@@ -79,7 +79,7 @@ export default function TrackOrderPage() {
     return (
       <div className="max-w-2xl">
         <div className="card text-center py-16">
-          <p className="text-4xl mb-3">🔍</p>
+          <Search className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="font-outfit font-bold text-navy mb-2">Order not found</p>
           <Button variant="primary" size="sm" onClick={() => router.push("/dashboard/orders")}>
             <ArrowLeft className="w-4 h-4" /> My Orders
@@ -189,7 +189,7 @@ export default function TrackOrderPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-outfit font-bold text-navy truncate">{order.riderName}</p>
-                  <p className="font-josefin text-gray-400 text-sm">🛵 Rider</p>
+                  <p className="font-josefin text-gray-400 text-sm flex items-center gap-1"><Bike className="w-3.5 h-3.5" /> Rider</p>
                 </div>
               </div>
             </div>
@@ -202,7 +202,7 @@ export default function TrackOrderPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-outfit font-bold text-navy truncate">{order.boatOperatorName}</p>
-                  <p className="font-josefin text-gray-400 text-sm">⛵ Boat Captain</p>
+                  <p className="font-josefin text-gray-400 text-sm flex items-center gap-1"><Sailboat className="w-3.5 h-3.5" /> Boat Captain</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ export default function TrackOrderPage() {
             </div>
           )}
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="font-josefin text-gray-500 text-sm">📍 Delivering to: <span className="font-semibold text-navy">{order.deliveryAddress}</span></p>
+            <p className="font-josefin text-gray-500 text-sm flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> Delivering to: <span className="font-semibold text-navy">{order.deliveryAddress}</span></p>
           </div>
         </div>
       )}

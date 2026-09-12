@@ -18,7 +18,9 @@ export default function BoatDashboard() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="page-header">Welcome, {user?.name?.split(" ")[0] ?? "Captain"} ⛵</h1>
+        <h1 className="page-header flex items-center gap-2">
+          Welcome, {user?.name?.split(" ")[0] ?? "Captain"} <Ship className="w-6 h-6" />
+        </h1>
         <p className="font-josefin text-gray-500 text-sm mt-1">
           {user?.boatName ?? "Your Boat"} · {new Date().toLocaleDateString("en-KE", { weekday: "long", month: "long", day: "numeric" })}
         </p>

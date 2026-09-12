@@ -31,19 +31,19 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div
-        className="absolute inset-0 bg-navy/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-navy/50 backdrop-blur-sm"
         onClick={onClose}
       />
       <div
         className={cn(
-          "relative bg-white rounded-2xl shadow-2xl w-full animate-slide-up",
+          "relative bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] max-h-[90dvh] flex flex-col animate-slide-up my-auto",
           sizeClasses[size]
         )}
       >
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
             <h2 className="font-outfit font-bold text-xl text-navy">{title}</h2>
             <button
               onClick={onClose}
@@ -53,7 +53,7 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
             </button>
           </div>
         )}
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

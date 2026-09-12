@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Zap, Smartphone, Map } from "lucide-react";
 import Image from "next/image";
 import { loginUser, loginWithGoogle, completeGoogleRedirect, getUserProfile, getRoleRedirect, resetPassword, setSessionCookie } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -127,12 +127,12 @@ export default function LoginPage() {
 
           <div className="space-y-4">
             {[
-              { icon: "⚡", text: "30-60 minute delivery to Lamu, Shela & Manda" },
-              { icon: "📱", text: "Pay with M-Pesa — fast and secure" },
-              { icon: "🗺️", text: "Track your order live on Google Maps" },
+              { icon: Zap, text: "30-60 minute delivery to Lamu, Shela & Manda" },
+              { icon: Smartphone, text: "Pay with M-Pesa — fast and secure" },
+              { icon: Map, text: "Track your order live on Google Maps" },
             ].map((item) => (
               <div key={item.text} className="flex items-center gap-3">
-                <span className="text-xl">{item.icon}</span>
+                <item.icon className="w-5 h-5 text-white flex-shrink-0" />
                 <span className="font-josefin text-white/80 text-sm">{item.text}</span>
               </div>
             ))}

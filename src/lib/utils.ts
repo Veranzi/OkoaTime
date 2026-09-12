@@ -69,11 +69,11 @@ export const STATUS_COLORS: Record<OrderStatus, string> = {
 };
 
 export const SERVICE_CATEGORIES = [
-  { id: "seafood", label: "Seafood", icon: "🐟", description: "Fresh fish, prawns, crabs & more" },
-  { id: "groceries", label: "House Shopping", icon: "🛒", description: "Groceries & household needs" },
-  { id: "fruits_veg", label: "Fruits & Vegetables", icon: "🥦", description: "Fresh produce daily" },
-  { id: "household", label: "Household Items", icon: "🏠", description: "Cleaning, supplies & more" },
-  { id: "boat", label: "Boat Transport", icon: "⛵", description: "Lamu · Shela · Manda routes" },
+  { id: "seafood", label: "Seafood", description: "Fresh fish, prawns, crabs & more" },
+  { id: "groceries", label: "House Shopping", description: "Groceries & household needs" },
+  { id: "fruits_veg", label: "Fruits & Vegetables", description: "Fresh produce daily" },
+  { id: "household", label: "Household Items", description: "Cleaning, supplies & more" },
+  { id: "boat", label: "Boat Transport", description: "Lamu · Shela · Manda routes" },
 ];
 
 // Categories an actual product can belong to (excludes "boat", which is transport).

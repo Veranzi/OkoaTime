@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Button from "@/components/ui/Button";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Fish, ShoppingCart, Carrot, Home, Sailboat, Smartphone, CheckCircle2 } from "lucide-react";
 
 export default function HeroSection() {
   return (
@@ -55,13 +55,13 @@ export default function HeroSection() {
             {/* Trust badges */}
             <div className="flex flex-wrap items-center gap-4 mt-8 justify-center lg:justify-start">
               <div className="flex items-center gap-2 text-white/70 text-sm font-josefin">
-                <span className="text-green-400">✓</span> M-Pesa Payments
+                <CheckCircle2 className="w-4 h-4 text-green-400" /> M-Pesa Payments
               </div>
               <div className="flex items-center gap-2 text-white/70 text-sm font-josefin">
-                <span className="text-green-400">✓</span> Live GPS Tracking
+                <CheckCircle2 className="w-4 h-4 text-green-400" /> Live GPS Tracking
               </div>
               <div className="flex items-center gap-2 text-white/70 text-sm font-josefin">
-                <span className="text-green-400">✓</span> 30-60 Min Delivery
+                <CheckCircle2 className="w-4 h-4 text-green-400" /> 30-60 Min Delivery
               </div>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function HeroSection() {
             <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 w-full max-w-sm shadow-2xl animate-slide-up">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-orange rounded-2xl flex items-center justify-center">
-                  <span className="text-2xl">🐟</span>
+                  <Fish className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="font-outfit font-bold text-white">Seafood Delivery</p>
@@ -99,7 +99,9 @@ export default function HeroSection() {
               </div>
 
               <div className="mt-4 bg-orange rounded-2xl py-3 px-6 text-center">
-                <p className="text-white font-outfit font-semibold text-sm">Pay with M-Pesa 📱</p>
+                <p className="text-white font-outfit font-semibold text-sm flex items-center justify-center gap-1.5">
+                  <Smartphone className="w-4 h-4" /> Pay with M-Pesa
+                </p>
               </div>
 
               <div className="mt-3 flex items-center justify-center gap-2">
@@ -113,18 +115,18 @@ export default function HeroSection() {
         {/* Service Icons Row */}
         <div className="mt-16 grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
           {[
-            { icon: "🐟", label: "Seafood" },
-            { icon: "🛒", label: "Shopping" },
-            { icon: "🥦", label: "Fruits & Veg" },
-            { icon: "🏠", label: "Household" },
-            { icon: "⛵", label: "Boat" },
+            { icon: Fish, label: "Seafood" },
+            { icon: ShoppingCart, label: "Shopping" },
+            { icon: Carrot, label: "Fruits & Veg" },
+            { icon: Home, label: "Household" },
+            { icon: Sailboat, label: "Boat" },
           ].map((item) => (
             <Link
               href="/dashboard/order/new"
               key={item.label}
               className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl border border-white/10 transition-all duration-200 group"
             >
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-200">{item.icon}</span>
+              <item.icon className="w-7 h-7 text-white group-hover:scale-110 transition-transform duration-200" />
               <span className="font-josefin text-white/80 text-sm font-semibold">{item.label}</span>
             </Link>
           ))}

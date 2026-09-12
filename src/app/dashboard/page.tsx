@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShoppingBag, Package, MapPin, ChevronRight, Clock } from "lucide-react";
+import { ShoppingBag, Package, MapPin, ChevronRight, Clock, Gift, Bike, Fish, Salad, Home, Sailboat, type LucideIcon } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { SERVICE_CATEGORIES, formatKES, formatRelative } from "@/lib/utils";
 import Button from "@/components/ui/Button";
@@ -10,6 +10,16 @@ import { getOrdersByCustomer, tsToDate } from "@/lib/firebase/db";
 import type { Order } from "@/lib/firebase/db";
 
 const ACTIVE_STATUSES = new Set(["pending", "confirmed", "ready", "rider_assigned", "picked_up"]);
+
+// utils.ts stores no icon component for SERVICE_CATEGORIES (only label/description),
+// so this file maps category id -> icon for display.
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  seafood: Fish,
+  groceries: ShoppingBag,
+  fruits_veg: Salad,
+  household: Home,
+  boat: Sailboat,
+};
 
 const statusBadge: Record<string, "green" | "red" | "yellow" | "blue" | "teal" | "orange" | "gray"> = {
   delivered: "green",
@@ -45,7 +55,7 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-5xl">
       {/* Welcome */}
       <div className="bg-hero-gradient rounded-2xl p-6 text-white">
-        <p className="font-josefin text-white/70 text-sm mb-1">Welcome back 👋</p>
+        <p className="font-josefin text-white/70 text-sm mb-1">Welcome back</p>
         <h1 className="font-outfit font-bold text-2xl text-white mb-3">
           {user?.name?.split(" ")[0] ?? "Customer"}
         </h1>
@@ -65,7 +75,7 @@ export default function DashboardPage() {
 
       {/* Promo Banner */}
       <div className="bg-orange-50 border border-orange/20 rounded-2xl p-4 flex flex-wrap items-center gap-3">
-        <span className="text-3xl flex-shrink-0">🎉</span>
+        <Gift className="w-8 h-8 flex-shrink-0 text-orange" />
         <div className="flex-1 min-w-0">
           <p className="font-outfit font-bold text-orange text-sm">First Order Free Delivery!</p>
           <p className="font-josefin text-gray-600 text-xs">Use code <strong>FIRST</strong> on your first order and enjoy free delivery.</p>
@@ -94,7 +104,7 @@ export default function DashboardPage() {
             <div className="flex flex-wrap items-center gap-3 text-sm">
               {activeOrder.riderName && (
                 <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
-                  <span>🛵</span> {activeOrder.riderName}
+                  <Bike className="w-3.5 h-3.5" /> {activeOrder.riderName}
                 </div>
               )}
               <div className="flex items-center gap-1.5 text-gray-500 font-josefin">
@@ -119,16 +129,19 @@ export default function DashboardPage() {
       <div>
         <h2 className="font-outfit font-bold text-lg text-navy mb-3">Order by Category</h2>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {SERVICE_CATEGORIES.map((cat) => (
-            <Link
-              key={cat.id}
-              href="/dashboard/order/new"
-              className="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-gray-100 hover:border-orange hover:shadow-card transition-all duration-200 group"
-            >
-              <span className="text-3xl group-hover:scale-110 transition-transform">{cat.icon}</span>
-              <span className="font-josefin font-semibold text-navy text-xs text-center">{cat.label}</span>
-            </Link>
-          ))}
+          {SERVICE_CATEGORIES.map((cat) => {
+            const CatIcon = CATEGORY_ICONS[cat.id] ?? Package;
+            return (
+              <Link
+                key={cat.id}
+                href="/dashboard/order/new"
+                className="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-gray-100 hover:border-orange hover:shadow-card transition-all duration-200 group"
+              >
+                <CatIcon className="w-8 h-8 text-orange group-hover:scale-110 transition-transform" />
+                <span className="font-josefin font-semibold text-navy text-xs text-center">{cat.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
 

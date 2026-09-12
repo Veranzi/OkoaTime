@@ -1,37 +1,38 @@
 import Link from "next/link";
 import Button from "@/components/ui/Button";
+import { Fish, ShoppingCart, Carrot, Home, Sailboat } from "lucide-react";
 
 const services = [
   {
-    icon: "🐟",
+    icon: Fish,
     title: "Seafood Delivery",
     description: "Fresh fish, prawns, crabs, and lobster delivered straight from Lamu fishermen to your door.",
     color: "from-blue-50 to-teal-50",
     borderColor: "border-teal/30",
   },
   {
-    icon: "🛒",
+    icon: ShoppingCart,
     title: "House Shopping",
     description: "Send us your shopping list. Our riders visit local shops and deliver everything you need.",
     color: "from-green-50 to-emerald-50",
     borderColor: "border-green-200",
   },
   {
-    icon: "🥦",
+    icon: Carrot,
     title: "Fruits & Vegetables",
     description: "Farm-fresh produce from local mama mbogas. Order daily and get the freshest picks.",
     color: "from-lime-50 to-green-50",
     borderColor: "border-lime-200",
   },
   {
-    icon: "🏠",
+    icon: Home,
     title: "Household Items",
     description: "Cleaning supplies, toiletries, electronics, and more from trusted local shops.",
     color: "from-purple-50 to-indigo-50",
     borderColor: "border-purple-200",
   },
   {
-    icon: "⛵",
+    icon: Sailboat,
     title: "Boat Transport",
     description: "Book a boat for Lamu-Shela, Shela-Manda, or custom routes. Fast, reliable, and affordable.",
     color: "from-orange-50 to-amber-50",
@@ -55,16 +56,16 @@ export default function ServicesSection() {
           {services.map((service) => (
             <div
               key={service.title}
-              className={`bg-gradient-to-br ${service.color} border ${service.borderColor} rounded-2xl p-6 hover:shadow-card-hover transition-all duration-300 group`}
+              className={`bg-gradient-to-br ${service.color} border ${service.borderColor} rounded-2xl p-6 hover:shadow-card-hover transition-all duration-300 group h-full flex flex-col`}
             >
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-200 w-fit">
-                {service.icon}
+              <div className="mb-4 group-hover:scale-110 transition-transform duration-200 w-fit">
+                <service.icon className="w-10 h-10 text-navy" />
               </div>
               <h3 className="font-outfit font-bold text-xl text-navy mb-2">{service.title}</h3>
               <p className="font-josefin text-gray-600 text-sm leading-relaxed mb-4">
                 {service.description}
               </p>
-              <Link href="/dashboard/order/new">
+              <Link href="/dashboard/order/new" className="mt-auto">
                 <Button size="sm" variant="secondary" className="w-full">
                   Order Now
                 </Button>

@@ -52,7 +52,7 @@ export default function SupplierDashboard() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
-        <h1 className="page-header">Good morning, {user?.name?.split(" ")[0] ?? "Supplier"} 👋</h1>
+        <h1 className="page-header">Good morning, {user?.name?.split(" ")[0] ?? "Supplier"}</h1>
         <p className="font-josefin text-gray-500 text-sm mt-1">{user?.businessName ?? "Your Business"} · {new Date().toLocaleDateString("en-KE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
       </div>
 

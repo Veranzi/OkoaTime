@@ -35,7 +35,11 @@ export default function Image() {
               fontSize: "48px",
             }}
           >
-            ⏱️
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <circle cx="12" cy="13" r="8" />
+              <path d="M12 9v4l3 2" />
+              <path d="M9 2h6" />
+            </svg>
           </div>
           <div style={{ display: "flex", fontSize: "80px", fontWeight: 900, color: "white", letterSpacing: "-2px" }}>
             Okoa<span style={{ color: "#E07B00" }}>Time</span>
@@ -58,7 +62,7 @@ export default function Image() {
 
         {/* Feature pills */}
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
-          {["🛵  Bike Delivery", "⛵  Boat Delivery", "📱  M-Pesa Payments", "🗺️  Live GPS Tracking"].map((item) => (
+          {["Bike Delivery", "Boat Delivery", "M-Pesa Payments", "Live GPS Tracking"].map((item) => (
             <div
               key={item}
               style={{
@@ -77,7 +81,7 @@ export default function Image() {
 
         {/* Location */}
         <div style={{ marginTop: "52px", fontSize: "22px", color: "rgba(255,255,255,0.40)" }}>
-          🇰🇪  Lamu · Shela · Manda Island — Kenya
+          Lamu · Shela · Manda Island — Kenya
         </div>
       </div>
     ),

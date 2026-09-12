@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { MapPin, Package, RefreshCw } from "lucide-react";
+import { MapPin, Package, RefreshCw, Search } from "lucide-react";
 import { formatKES, formatRelative } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -13,8 +13,8 @@ import type { Order } from "@/lib/firebase/db";
 const RIDER_SHARE = 0.7; // rider gets 70%, OkoaTime keeps 30% of delivery fee
 
 const DELIVERY_BADGE: Record<string, string> = {
-  bike: "🛵 Bike",
-  bike_to_boat: "🛵➡️⛵ Bike + Boat",
+  bike: "Bike",
+  bike_to_boat: "Bike + Boat",
 };
 
 export default function RiderOrdersPage() {
@@ -78,7 +78,7 @@ export default function RiderOrdersPage() {
         </div>
       ) : orders.length === 0 ? (
         <div className="card text-center py-14">
-          <div className="text-5xl mb-4">🔍</div>
+          <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="font-outfit font-bold text-navy text-lg mb-2">No Orders Ready</p>
           <p className="font-josefin text-gray-500 text-sm mb-4">
             Orders appear here once a supplier marks them ready for pickup.

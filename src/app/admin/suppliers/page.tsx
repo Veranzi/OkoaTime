@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Check, X, Eye, RefreshCw } from "lucide-react";
+import { Check, X, Eye, RefreshCw, Store, MapPin } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
@@ -53,7 +53,7 @@ export default function AdminSuppliersPage() {
         <div className="space-y-4">{[1, 2].map((i) => <div key={i} className="card animate-pulse h-28 bg-gray-50" />)}</div>
       ) : suppliers.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">🏪</p>
+          <Store className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           <p className="font-outfit font-bold text-navy">No suppliers registered yet</p>
         </div>
       ) : (
@@ -64,13 +64,13 @@ export default function AdminSuppliersPage() {
               <div key={supplier.uid} className={`card ${supplier.status === "pending" ? "border-l-4 border-l-orange" : ""}`}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">🏪</div>
+                    <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center flex-shrink-0"><Store className="w-6 h-6 text-orange" /></div>
                     <div className="min-w-0">
                       <p className="font-outfit font-bold text-navy truncate">{supplier.businessName ?? supplier.name}</p>
                       <p className="font-josefin text-gray-500 text-sm truncate">{supplier.name} · {supplier.email}</p>
                       <div className="flex items-center gap-2 mt-1">
                         {supplier.serviceCategory && <span className="text-xs font-josefin text-gray-400 capitalize">{supplier.serviceCategory}</span>}
-                        {supplier.location && <><span className="text-gray-200">|</span><span className="text-xs font-josefin text-gray-400">📍 {supplier.location}</span></>}
+                        {supplier.location && <><span className="text-gray-200">|</span><span className="text-xs font-josefin text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" /> {supplier.location}</span></>}
                       </div>
                     </div>
                   </div>

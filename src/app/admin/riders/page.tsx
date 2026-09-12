@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Search, MapPin, RefreshCw } from "lucide-react";
+import { Search, MapPin, RefreshCw, Bike } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import { getUsersByRole, tsToDate } from "@/lib/firebase/db";
@@ -45,13 +45,13 @@ export default function AdminRidersPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">🛵</p>
+          <Bike className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           <p className="font-outfit font-bold text-navy">No riders registered yet</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filtered.map((rider) => (
-            <div key={rider.uid} className="card">
+            <div key={rider.uid} className="card h-full flex flex-col">
               <div className="flex items-start gap-4 mb-3">
                 <div className="relative">
                   <div className="w-12 h-12 bg-teal rounded-2xl flex items-center justify-center">
@@ -70,7 +70,7 @@ export default function AdminRidersPage() {
                   {rider.status.charAt(0).toUpperCase() + rider.status.slice(1)}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-sm">
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-sm mt-auto">
                 <span className="font-josefin text-gray-400 text-xs">
                   Joined {rider.createdAt ? formatDate(tsToDate(rider.createdAt)) : "—"}
                 </span>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, RotateCcw, ChevronRight, RefreshCw } from "lucide-react";
+import { MapPin, RotateCcw, ChevronRight, RefreshCw, Package } from "lucide-react";
 import { formatKES, formatDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -71,7 +71,7 @@ export default function OrdersPage() {
         </div>
       ) : orders.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">🛍️</p>
+          <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="font-outfit font-bold text-navy mb-1">No orders yet</p>
           <p className="font-josefin text-gray-400 text-sm mb-4">Place your first order to get started.</p>
           <Link href="/dashboard/order/new">

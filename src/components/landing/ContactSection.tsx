@@ -1,4 +1,5 @@
 import Button from "@/components/ui/Button";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
 export default function ContactSection() {
   return (
@@ -14,14 +15,14 @@ export default function ContactSection() {
 
             <div className="space-y-4">
               {[
-                { icon: "📍", label: "Location", value: "Lamu Island, Kenya" },
-                { icon: "📞", label: "Phone", value: "+254 707 132 823", href: "tel:+254707132823" },
-                { icon: "📞", label: "Phone 2", value: "+254 740 875 071", href: "tel:+254740875071" },
-                { icon: "✉️", label: "Email", value: "hello@okoatime.avytria.com", href: "mailto:hello@okoatime.avytria.com" },
-                { icon: "🕐", label: "Operating Hours", value: "Daily 6:00 AM – 10:00 PM" },
+                { icon: MapPin, label: "Location", value: "Lamu Island, Kenya" },
+                { icon: Phone, label: "Phone", value: "+254 707 132 823", href: "tel:+254707132823" },
+                { icon: Phone, label: "Phone 2", value: "+254 740 875 071", href: "tel:+254740875071" },
+                { icon: Mail, label: "Email", value: "hello@okoatime.avytria.com", href: "mailto:hello@okoatime.avytria.com" },
+                { icon: Clock, label: "Operating Hours", value: "Daily 6:00 AM – 10:00 PM" },
               ].map((item) => (
                 <div key={item.label} className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-                  <span className="text-2xl">{item.icon}</span>
+                  <item.icon className="w-6 h-6 text-orange flex-shrink-0" />
                   <div>
                     <p className="font-josefin text-gray-400 text-xs uppercase tracking-wider">{item.label}</p>
                     {item.href ? (

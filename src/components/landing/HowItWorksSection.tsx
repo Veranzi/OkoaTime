@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Button from "@/components/ui/Button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Smartphone, Bike, MapPin } from "lucide-react";
 
 const steps = [
   {
     step: "01",
-    icon: "📱",
+    icon: Smartphone,
     title: "Browse & Order",
     description: "Choose your service, add items, enter your delivery address, and pay securely via M-Pesa.",
     color: "bg-teal-50 border-teal/20",
@@ -13,7 +13,7 @@ const steps = [
   },
   {
     step: "02",
-    icon: "🛵",
+    icon: Bike,
     title: "Rider Picks Up",
     description: "A nearby rider accepts your order, heads to the supplier, and picks up your items.",
     color: "bg-orange-50 border-orange/20",
@@ -21,7 +21,7 @@ const steps = [
   },
   {
     step: "03",
-    icon: "📍",
+    icon: MapPin,
     title: "Delivered To You",
     description: "Track your order live on the map. Get real-time updates until it arrives at your door.",
     color: "bg-navy-50 border-navy/20",
@@ -53,7 +53,7 @@ export default function HowItWorksSection() {
                 </div>
               )}
               <div className={`border-2 ${step.color} rounded-2xl p-8 text-center hover:shadow-card transition-shadow duration-300`}>
-                <div className="text-5xl mb-4">{step.icon}</div>
+                <step.icon className={`w-12 h-12 mx-auto mb-4 ${step.numberColor}`} />
                 <div className={`font-outfit font-black text-5xl ${step.numberColor} opacity-20 mb-2`}>
                   {step.step}
                 </div>

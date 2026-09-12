@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Ship } from "lucide-react";
 import { formatKES } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -54,7 +54,7 @@ export default function BoatListingsPage() {
           <div key={boat.id} className={`card ${!boat.available ? "opacity-60" : ""}`}>
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center text-2xl">⛵</div>
+                <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center"><Ship className="w-6 h-6 text-teal" /></div>
                 <div>
                   <p className="font-outfit font-bold text-navy text-lg">{boat.name}</p>
                   <p className="font-josefin text-gray-400 text-sm">Capacity: {boat.capacity} passengers</p>

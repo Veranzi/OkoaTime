@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Plus, Edit2, Trash2, Eye, EyeOff, Search, Upload, ImageIcon, Loader2, Sparkles } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Search, Upload, ImageIcon, Loader2, Sparkles, Package } from "lucide-react";
 import { formatKES } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -203,7 +203,7 @@ export default function SupplierProductsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">📦</p>
+          <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="font-outfit font-bold text-navy mb-1">No products yet</p>
           <p className="font-josefin text-gray-400 text-sm mb-4">Add your first product to start receiving orders.</p>
           <Button variant="primary" size="sm" onClick={openAdd}><Plus className="w-4 h-4" /> Add Product</Button>

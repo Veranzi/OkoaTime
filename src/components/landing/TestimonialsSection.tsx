@@ -1,3 +1,5 @@
+import { Star } from "lucide-react";
+
 const testimonials = [
   {
     name: "Fatuma Hassan",
@@ -41,11 +43,11 @@ export default function TestimonialsSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t) => (
-            <div key={t.name} className="card hover:shadow-card-hover transition-shadow duration-300">
+            <div key={t.name} className="card hover:shadow-card-hover transition-shadow duration-300 h-full flex flex-col">
               {/* Stars */}
               <div className="flex items-center gap-1 mb-4">
                 {Array.from({ length: t.rating }).map((_, i) => (
-                  <span key={i} className="text-orange text-lg">★</span>
+                  <Star key={i} className="w-4 h-4 text-orange fill-orange" />
                 ))}
               </div>
 
@@ -60,7 +62,7 @@ export default function TestimonialsSection() {
               )}
 
               {/* Author */}
-              <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-3 mt-auto pt-4 border-t border-gray-100">
                 <div className="w-10 h-10 bg-navy rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="font-outfit font-bold text-white text-sm">{t.avatar}</span>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Check, X, Users, MapPin, Calendar, RefreshCw } from "lucide-react";
+import { Check, X, Users, MapPin, Calendar, RefreshCw, Ship } from "lucide-react";
 import { formatKES, formatDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -55,7 +55,7 @@ export default function BoatBookingsPage() {
         <div className="space-y-4">{[1, 2].map((i) => <div key={i} className="card animate-pulse h-36 bg-gray-50" />)}</div>
       ) : bookings.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">⛵</p>
+          <Ship className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           <p className="font-outfit font-bold text-navy mb-1">No bookings yet</p>
           <p className="font-josefin text-gray-400 text-sm">Bookings from customers will appear here.</p>
         </div>

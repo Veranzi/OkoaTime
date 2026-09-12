@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, DollarSign, Package, Star, TrendingUp } from "lucide-react";
+import { ChevronRight, DollarSign, Package, Star, TrendingUp, Bike } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { formatKES, formatRelative } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
@@ -30,13 +30,15 @@ export default function RiderHomePage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="page-header">Hey, {user?.name?.split(" ")[0] ?? "Rider"} 🛵</h1>
+        <h1 className="page-header flex items-center gap-2">
+          Hey, {user?.name?.split(" ")[0] ?? "Rider"} <Bike className="w-6 h-6" />
+        </h1>
         <p className="font-josefin text-gray-500 text-sm">{new Date().toLocaleDateString("en-KE", { weekday: "long", month: "long", day: "numeric" })}</p>
       </div>
 
       <div className={`rounded-3xl p-8 text-center transition-all duration-500 ${isOnline ? "bg-gradient-to-br from-green-400 to-teal" : "bg-gray-100"}`}>
         <div className={`w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-4 transition-all duration-300 ${isOnline ? "bg-white/20 shadow-lg shadow-green-400/30" : "bg-gray-200"}`}>
-          <span className="text-4xl">{isOnline ? "🟢" : "🔴"}</span>
+          <span className={`block w-8 h-8 rounded-full ${isOnline ? "bg-green-400 animate-pulse" : "bg-red-400"}`} />
         </div>
         <p className={`font-outfit font-black text-2xl mb-2 ${isOnline ? "text-white" : "text-gray-500"}`}>
           {isOnline ? "You're Online" : "You're Offline"}
@@ -56,7 +58,7 @@ export default function RiderHomePage() {
         <StatCard label="Today's Earnings" value={formatKES(todayEarnings)} icon={<DollarSign className="w-4 h-4" />} color="orange" />
         <StatCard label="This Week" value={formatKES(weekEarnings)} icon={<TrendingUp className="w-4 h-4" />} color="teal" />
         <StatCard label="Deliveries Today" value={todaysOrders.length.toString()} icon={<Package className="w-4 h-4" />} color="navy" />
-        <StatCard label="Rating" value="4.8 ⭐" icon={<Star className="w-4 h-4" />} color="green" />
+        <StatCard label="Rating" value="4.8" icon={<Star className="w-4 h-4" />} color="green" />
       </div>
 
       {activeOrder && (

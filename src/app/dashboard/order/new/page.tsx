@@ -3,7 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, RefreshCw, Search, ImageIcon } from "lucide-react";
+import {
+  ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, RefreshCw, Search, ImageIcon,
+  Building2, Waves, Palmtree, Sailboat, Fish, Salad, Home, ShoppingBag, Package, Smartphone, Clock, XCircle, Store,
+  type LucideIcon,
+} from "lucide-react";
 import { SERVICE_CATEGORIES, formatKES, toMpesaPhone } from "@/lib/utils";
 import { useOrderStore } from "@/lib/store/useOrderStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -15,12 +19,23 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 
-const DELIVERY_ZONES: { id: string; icon: string; label: string; desc: string; type: DeliveryType; fee: number; badge: string }[] = [
-  { id: "lamu_town",  icon: "🏘️", label: "Lamu Town",    desc: "Main town · Lamu Island",             type: "bike",         fee: 100, badge: "🛵 Bike" },
-  { id: "shela",      icon: "🏖️", label: "Shela",         desc: "Shela village & beach · Lamu Island",  type: "bike",         fee: 150, badge: "🛵 Bike" },
-  { id: "manda",      icon: "🏝️", label: "Manda Island",  desc: "Across the channel · bike + boat",     type: "bike_to_boat", fee: 250, badge: "🛵➡️⛵ Bike + Boat" },
-  { id: "other",      icon: "⛵",  label: "Other Island",  desc: "Pate, Siyu or further destinations",  type: "boat",         fee: 400, badge: "⛵ Boat" },
+const DELIVERY_ZONES: { id: string; icon: LucideIcon; label: string; desc: string; type: DeliveryType; fee: number; badge: string }[] = [
+  { id: "lamu_town",  icon: Building2, label: "Lamu Town",    desc: "Main town · Lamu Island",             type: "bike",         fee: 100, badge: "Bike" },
+  { id: "shela",      icon: Waves,     label: "Shela",         desc: "Shela village & beach · Lamu Island",  type: "bike",         fee: 150, badge: "Bike" },
+  { id: "manda",      icon: Palmtree,  label: "Manda Island",  desc: "Across the channel · bike + boat",     type: "bike_to_boat", fee: 250, badge: "Bike + Boat" },
+  { id: "other",      icon: Sailboat,  label: "Other Island",  desc: "Pate, Siyu or further destinations",  type: "boat",         fee: 400, badge: "Boat" },
 ];
+
+// Local icon lookup for SERVICE_CATEGORIES ids (utils.ts stores no icon component,
+// only a plain label/description, so this file maps id -> icon for display).
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  seafood: Fish,
+  groceries: ShoppingCart,
+  fruits_veg: Salad,
+  household: Home,
+  boat: Sailboat,
+  all: ShoppingBag,
+};
 
 const STEP_LABELS = ["Shop", "Delivery", "Review", "Payment"];
 
@@ -134,7 +149,6 @@ export default function NewOrderPage() {
       return [{
         catId: activeFilter,
         catLabel: SERVICE_CATEGORIES.find((c) => c.id === activeFilter)?.label ?? activeFilter,
-        catIcon: SERVICE_CATEGORIES.find((c) => c.id === activeFilter)?.icon ?? "📦",
         products: filteredProducts,
       }];
     }
@@ -146,14 +160,13 @@ export default function NewOrderPage() {
     return Object.entries(grouped).map(([catId, products]) => ({
       catId,
       catLabel: SERVICE_CATEGORIES.find((c) => c.id === catId)?.label ?? catId,
-      catIcon: SERVICE_CATEGORIES.find((c) => c.id === catId)?.icon ?? "📦",
       products,
     }));
   })();
 
   const filterTabs = [
-    { id: "all", label: "All", icon: "🛍️" },
-    ...SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label, icon: c.icon })),
+    { id: "all", label: "All" },
+    ...SERVICE_CATEGORIES.map((c) => ({ id: c.id, label: c.label })),
   ];
 
   function openBrowse(filter: string, initialSearch = "") {
@@ -325,7 +338,7 @@ export default function NewOrderPage() {
               onClick={() => openBrowse("all")}
               className="w-full flex items-center gap-4 p-4 border-2 border-navy/20 rounded-2xl hover:border-navy hover:bg-gray-50 transition-all duration-200 text-left group mb-4"
             >
-              <span className="text-3xl group-hover:scale-110 transition-transform">🛍️</span>
+              <ShoppingBag className="w-8 h-8 flex-shrink-0 text-navy group-hover:scale-110 transition-transform" />
               <div className="flex-1">
                 <p className="font-outfit font-bold text-navy text-sm">Browse All Products</p>
                 <p className="font-josefin text-gray-400 text-xs">Mix items from any category in one order</p>
@@ -341,20 +354,23 @@ export default function NewOrderPage() {
 
             {/* Category Shortcuts */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {SERVICE_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => openBrowse(cat.id)}
-                  className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-2xl hover:border-orange hover:bg-orange-50 transition-all duration-200 text-left group"
-                >
-                  <span className="text-3xl group-hover:scale-110 transition-transform">{cat.icon}</span>
-                  <div className="flex-1">
-                    <p className="font-outfit font-bold text-navy text-sm">{cat.label}</p>
-                    <p className="font-josefin text-gray-400 text-xs">{cat.description}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-orange" />
-                </button>
-              ))}
+              {SERVICE_CATEGORIES.map((cat) => {
+                const CatIcon = CATEGORY_ICONS[cat.id] ?? Package;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => openBrowse(cat.id)}
+                    className="flex items-center gap-4 p-4 border-2 border-gray-100 rounded-2xl hover:border-orange hover:bg-orange-50 transition-all duration-200 text-left group"
+                  >
+                    <CatIcon className="w-8 h-8 flex-shrink-0 text-orange group-hover:scale-110 transition-transform" />
+                    <div className="flex-1">
+                      <p className="font-outfit font-bold text-navy text-sm">{cat.label}</p>
+                      <p className="font-josefin text-gray-400 text-xs">{cat.description}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-orange" />
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -394,20 +410,23 @@ export default function NewOrderPage() {
 
             {/* Category Filter Tabs */}
             <div className="flex gap-2 overflow-x-auto px-5 py-3 border-b border-gray-100">
-              {filterTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveFilter(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-josefin font-semibold flex-shrink-0 transition-all ${
-                    activeFilter === tab.id
-                      ? "bg-orange text-white shadow-sm"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
+              {filterTabs.map((tab) => {
+                const TabIcon = CATEGORY_ICONS[tab.id] ?? Package;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFilter(tab.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-josefin font-semibold flex-shrink-0 transition-all ${
+                      activeFilter === tab.id
+                        ? "bg-orange text-white shadow-sm"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    <TabIcon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Products */}
@@ -420,18 +439,20 @@ export default function NewOrderPage() {
                 </div>
               ) : sectionsToShow.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-3xl mb-2">🔍</p>
+                  <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                   <p className="font-outfit font-bold text-navy text-sm">No products found</p>
                   <p className="font-josefin text-gray-400 text-xs mt-1">
                     {search ? <>No results for &ldquo;{search}&rdquo;</> : "No products available in this category"}
                   </p>
                 </div>
               ) : (
-                sectionsToShow.map((section) => (
+                sectionsToShow.map((section) => {
+                  const SectionIcon = CATEGORY_ICONS[section.catId] ?? Package;
+                  return (
                   <div key={section.catId}>
                     {activeFilter === "all" && (
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-base">{section.catIcon}</span>
+                        <SectionIcon className="w-4 h-4 text-gray-500" />
                         <p className="font-outfit font-bold text-navy text-sm">{section.catLabel}</p>
                         <div className="flex-1 h-px bg-gray-100" />
                       </div>
@@ -502,7 +523,8 @@ export default function NewOrderPage() {
                       })}
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
 
               {/* Notes */}
@@ -565,7 +587,7 @@ export default function NewOrderPage() {
                           selected ? "border-orange bg-orange-50" : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
-                        <span className="text-2xl flex-shrink-0 mt-0.5">{zone.icon}</span>
+                        <zone.icon className="w-6 h-6 flex-shrink-0 mt-0.5 text-navy" />
                         <div className="flex-1 min-w-0">
                           <p className="font-outfit font-bold text-navy text-sm">{zone.label}</p>
                           <p className="font-josefin text-gray-500 text-xs">{zone.desc}</p>
@@ -676,8 +698,8 @@ export default function NewOrderPage() {
                 {deliveryZoneId && (() => {
                   const zone = DELIVERY_ZONES.find((z) => z.id === deliveryZoneId);
                   return zone ? (
-                    <p className="font-josefin text-gray-400 text-xs mt-1">
-                      {zone.icon} {zone.label} · {zone.badge}
+                    <p className="font-josefin text-gray-400 text-xs mt-1 flex items-center gap-1">
+                      <zone.icon className="w-3.5 h-3.5" /> {zone.label} · {zone.badge}
                     </p>
                   ) : null;
                 })()}
@@ -739,7 +761,9 @@ export default function NewOrderPage() {
               <div className="text-center py-8">
                 <div className="relative w-24 h-24 mx-auto mb-6">
                   <div className="w-24 h-24 rounded-full border-4 border-orange/20 border-t-orange animate-spin" />
-                  <span className="absolute inset-0 flex items-center justify-center text-3xl">📱</span>
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Smartphone className="w-8 h-8 text-orange" />
+                  </span>
                 </div>
                 <h2 className="font-outfit font-black text-xl text-navy mb-2">
                   {paymentStatus === "sending" ? "Sending M-Pesa Prompt…" : "Waiting for Your PIN"}
@@ -799,9 +823,11 @@ export default function NewOrderPage() {
             {(paymentStatus === "failed" || paymentStatus === "timeout") && (
               <div className="text-center py-8">
                 <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-4xl">
-                    {paymentStatus === "timeout" ? "⏰" : "❌"}
-                  </span>
+                  {paymentStatus === "timeout" ? (
+                    <Clock className="w-10 h-10 text-red-500" />
+                  ) : (
+                    <XCircle className="w-10 h-10 text-red-500" />
+                  )}
                 </div>
                 <h2 className="font-outfit font-black text-xl text-navy mb-2">
                   {paymentStatus === "timeout" ? "Request Timed Out" : "Payment Not Completed"}
@@ -856,7 +882,7 @@ export default function NewOrderPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {(["mpesa", "till"] as const).map((method) => (
                       <button
                         key={method}
@@ -867,7 +893,9 @@ export default function NewOrderPage() {
                             : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
-                        <div className="text-2xl mb-1">{method === "mpesa" ? "📱" : "🏪"}</div>
+                        <div className="mb-1 flex justify-center">
+                          {method === "mpesa" ? <Smartphone className="w-6 h-6" /> : <Store className="w-6 h-6" />}
+                        </div>
                         <p className="font-outfit font-bold text-navy text-sm">
                           {method === "mpesa" ? "M-Pesa" : "Pay with Till"}
                         </p>

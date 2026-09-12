@@ -1,27 +1,28 @@
 "use client";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
+import { Zap, Smartphone, Navigation, Handshake, MapPin } from "lucide-react";
 
 const benefits = [
   {
-    icon: "⚡",
+    icon: Zap,
     title: "Fast Delivery",
     description: "30 to 60 minute delivery across Lamu Island, Shela, and Manda. We know the routes.",
     bgColor: "bg-yellow-50",
   },
   {
-    icon: "📱",
+    icon: Smartphone,
     title: "M-Pesa Payments",
     description: "Pay securely via M-Pesa STK Push or cash on delivery. No card needed.",
     bgColor: "bg-green-50",
   },
   {
-    icon: "🗺️",
+    icon: Navigation,
     title: "Live GPS Tracking",
     description: "Watch your rider move in real-time on Google Maps. Know exactly when to expect your order.",
     bgColor: "bg-blue-50",
   },
   {
-    icon: "🤝",
+    icon: Handshake,
     title: "Local & Trusted",
     description: "All our suppliers and riders are vetted locals from Lamu. Supporting community businesses.",
     bgColor: "bg-orange-50",
@@ -48,7 +49,7 @@ export default function WhyOkoaTimeSection() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {benefits.map((b) => (
                 <div key={b.title} className={`${b.bgColor} rounded-2xl p-5`}>
-                  <div className="text-3xl mb-3">{b.icon}</div>
+                  <div className="mb-3"><b.icon className="w-7 h-7 text-navy" /></div>
                   <h3 className="font-outfit font-bold text-navy text-base mb-1">{b.title}</h3>
                   <p className="font-josefin text-gray-600 text-xs leading-relaxed">{b.description}</p>
                 </div>
@@ -60,8 +61,8 @@ export default function WhyOkoaTimeSection() {
           <div className="relative">
             <div className="bg-gradient-to-br from-navy to-teal rounded-3xl p-8 text-white">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">
-                  📍
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="font-outfit font-bold">Live Tracking</p>

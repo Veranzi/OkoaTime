@@ -1,9 +1,11 @@
+import { Smartphone } from "lucide-react";
+
 export default function AppCTASection() {
   return (
     <section className="py-20 bg-navy">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-sm font-josefin px-4 py-2 rounded-full border border-white/20 mb-6">
-          <span>📲</span> Mobile App — Coming Soon
+          <Smartphone className="w-4 h-4" /> Mobile App — Coming Soon
         </div>
 
         <h2 className="font-outfit font-black text-2xl sm:text-3xl md:text-4xl text-white mb-4">

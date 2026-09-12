@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Check, X, Clock, ChevronDown, RefreshCw } from "lucide-react";
+import { Check, X, Clock, ChevronDown, RefreshCw, Inbox, Phone, MapPin } from "lucide-react";
 import { formatKES, formatRelative } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -81,7 +81,7 @@ export default function SupplierOrdersPage() {
         </div>
       ) : orders.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">📭</p>
+          <Inbox className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="font-outfit font-bold text-navy mb-1">No orders yet</p>
           <p className="font-josefin text-gray-400 text-sm">Orders matching your category will appear here.</p>
         </div>
@@ -103,7 +103,7 @@ export default function SupplierOrdersPage() {
                 <div>
                   <p className="font-josefin text-gray-400 text-xs">{formatRelative(tsToDate(order.createdAt))}</p>
                   <p className="font-outfit font-bold text-navy text-sm mt-0.5">{order.customerName}</p>
-                  <p className="font-josefin text-gray-400 text-xs">📞 {order.customerPhone}</p>
+                  <p className="font-josefin text-gray-400 text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {order.customerPhone}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <Badge variant={statusVariant[order.status] ?? "gray"}>
@@ -130,7 +130,7 @@ export default function SupplierOrdersPage() {
                     </div>
                   ))}
                   <div className="pt-2 border-t border-gray-100">
-                    <p className="font-josefin text-xs text-gray-400">📍 Delivery to:</p>
+                    <p className="font-josefin text-xs text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" /> Delivery to:</p>
                     <p className="font-josefin text-navy text-sm">{order.deliveryAddress}</p>
                   </div>
                   {order.notes && (
@@ -152,7 +152,7 @@ export default function SupplierOrdersPage() {
                 )}
                 {order.status === "confirmed" && (
                   <Button variant="teal" size="sm" className="flex-1" onClick={() => changeStatus(order.id, "ready")}>
-                    ✅ Mark Ready for Pickup
+                    <Check className="w-3.5 h-3.5" /> Mark Ready for Pickup
                   </Button>
                 )}
               </div>

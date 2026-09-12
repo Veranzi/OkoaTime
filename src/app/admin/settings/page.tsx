@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Save } from "lucide-react";
+import { Save, MapPin } from "lucide-react";
 import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
 
@@ -69,8 +69,8 @@ export default function AdminSettingsPage() {
         <h3 className="font-outfit font-bold text-navy mb-4">Service Areas</h3>
         <div className="flex flex-wrap gap-2">
           {["Lamu Town", "Lamu Waterfront", "Shela Village", "Shela Beach", "Manda Island", "Manda Airport"].map((area) => (
-            <span key={area} className="bg-teal-50 text-teal text-sm font-josefin font-semibold px-3 py-1.5 rounded-xl border border-teal/20">
-              📍 {area}
+            <span key={area} className="bg-teal-50 text-teal text-sm font-josefin font-semibold px-3 py-1.5 rounded-xl border border-teal/20 inline-flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5" /> {area}
             </span>
           ))}
         </div>

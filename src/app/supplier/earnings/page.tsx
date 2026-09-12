@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DollarSign, TrendingUp, Download, Phone, Clock, Check, X } from "lucide-react";
+import { DollarSign, TrendingUp, Download, Phone, Clock, Check, X, Lightbulb } from "lucide-react";
 import { formatKES, formatDate } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -99,9 +99,12 @@ export default function SupplierEarningsPage() {
         <StatCard label="Available" value={formatKES(available)} icon={<DollarSign className="w-5 h-5" />} color="green" />
       </div>
 
-      <div className="bg-navy-50 rounded-2xl p-4 mb-6 text-sm font-josefin text-gray-600">
-        💡 OkoaTime charges a <strong className="text-navy">10% platform commission</strong> on each order.
-        Net = Items Amount − Commission. Delivery fee is handled separately.
+      <div className="bg-navy-50 rounded-2xl p-4 mb-6 text-sm font-josefin text-gray-600 flex items-start gap-2">
+        <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-navy" />
+        <span>
+          OkoaTime charges a <strong className="text-navy">10% platform commission</strong> on each order.
+          Net = Items Amount − Commission. Delivery fee is handled separately.
+        </span>
       </div>
 
       {/* Payout History */}
@@ -146,7 +149,7 @@ export default function SupplierEarningsPage() {
           </div>
         ) : orders.length === 0 ? (
           <div className="py-10 text-center">
-            <p className="text-3xl mb-3">💰</p>
+            <DollarSign className="w-8 h-8 text-gray-300 mx-auto mb-3" />
             <p className="font-outfit font-bold text-navy mb-1">No earnings yet</p>
             <p className="font-josefin text-gray-400 text-sm">Earnings appear here once orders are delivered.</p>
           </div>

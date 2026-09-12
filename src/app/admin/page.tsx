@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Users, ShoppingBag, DollarSign, Truck, Clock, TrendingUp } from "lucide-react";
+import { Users, ShoppingBag, DollarSign, Truck, Clock, TrendingUp, ShoppingCart, Store, Bike, Sailboat } from "lucide-react";
 import { formatKES, formatRelative } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               {recentOrders.map((item, i) => (
                 <div key={i} className="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0">
-                  <span className="text-lg flex-shrink-0">🛒</span>
+                  <ShoppingCart className="w-4 h-4 flex-shrink-0 text-gray-400 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="font-josefin text-navy text-xs leading-relaxed truncate">{item.message}</p>
                     <p className="font-josefin text-gray-400 text-xs mt-0.5">{formatRelative(item.time)}</p>
@@ -120,13 +120,13 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { emoji: "👥", label: "Customers", value: customers.length.toString(), sub: "registered" },
-          { emoji: "🏪", label: "Suppliers", value: suppliers.length.toString(), sub: "approved" },
-          { emoji: "🛵", label: "Riders", value: riders.length.toString(), sub: "registered" },
-          { emoji: "⛵", label: "Boat Operators", value: boats.length.toString(), sub: "registered" },
+          { icon: Users, label: "Customers", value: customers.length.toString(), sub: "registered" },
+          { icon: Store, label: "Suppliers", value: suppliers.length.toString(), sub: "approved" },
+          { icon: Bike, label: "Riders", value: riders.length.toString(), sub: "registered" },
+          { icon: Sailboat, label: "Boat Operators", value: boats.length.toString(), sub: "registered" },
         ].map((m) => (
           <div key={m.label} className="card text-center">
-            <div className="text-3xl mb-2">{m.emoji}</div>
+            <div className="flex justify-center mb-2"><m.icon className="w-8 h-8 text-navy" /></div>
             <p className="font-outfit font-black text-navy text-2xl">{m.value}</p>
             <p className="font-outfit font-semibold text-gray-500 text-sm">{m.label}</p>
             <p className="font-josefin text-gray-400 text-xs">{m.sub}</p>

@@ -130,7 +130,7 @@ export default function GoogleMapComponent({
   if (!HAS_KEY) {
     return (
       <div className={`bg-gradient-to-br from-navy to-teal rounded-2xl ${height} flex flex-col items-center justify-center gap-3 ${className}`}>
-        <div className="text-5xl">🗺️</div>
+        <MapPin className="w-12 h-12 text-white/70" />
         <p className="font-josefin text-white font-semibold text-sm">Live Map — Lamu · Shela · Manda</p>
         <p className="font-josefin text-white/50 text-xs text-center px-4">
           Add <span className="font-mono bg-white/10 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</span> to enable

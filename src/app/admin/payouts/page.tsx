@@ -111,28 +111,30 @@ export default function AdminPayoutsPage() {
           <div className="card text-center py-8 font-josefin text-gray-400">No completed payouts yet</div>
         ) : (
           <div className="card overflow-hidden p-0">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Name", "Role", "M-Pesa", "Amount", "Ref", "Status", "Date"].map((h) => (
-                    <th key={h} className="text-left font-outfit font-semibold text-gray-400 text-xs p-4 whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {done.map((req) => (
-                  <tr key={req.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="p-4 font-josefin font-semibold text-navy">{req.userName}</td>
-                    <td className="p-4 font-josefin text-gray-500 capitalize text-xs">{req.userRole}</td>
-                    <td className="p-4 font-josefin text-gray-500">{req.phone}</td>
-                    <td className="p-4 font-outfit font-bold text-navy">{formatKES(req.amount)}</td>
-                    <td className="p-4 font-josefin text-teal text-xs">{req.mpesaRef ?? "—"}</td>
-                    <td className="p-4"><Badge variant={statusBadge[req.status]}>{req.status.charAt(0).toUpperCase() + req.status.slice(1)}</Badge></td>
-                    <td className="p-4 font-josefin text-gray-400 text-xs whitespace-nowrap">{formatDate(tsToDate(req.createdAt))}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    {["Name", "Role", "M-Pesa", "Amount", "Ref", "Status", "Date"].map((h) => (
+                      <th key={h} className="text-left font-outfit font-semibold text-gray-400 text-xs p-4 whitespace-nowrap">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {done.map((req) => (
+                    <tr key={req.id} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="p-4 font-josefin font-semibold text-navy">{req.userName}</td>
+                      <td className="p-4 font-josefin text-gray-500 capitalize text-xs">{req.userRole}</td>
+                      <td className="p-4 font-josefin text-gray-500">{req.phone}</td>
+                      <td className="p-4 font-outfit font-bold text-navy">{formatKES(req.amount)}</td>
+                      <td className="p-4 font-josefin text-teal text-xs">{req.mpesaRef ?? "—"}</td>
+                      <td className="p-4"><Badge variant={statusBadge[req.status]}>{req.status.charAt(0).toUpperCase() + req.status.slice(1)}</Badge></td>
+                      <td className="p-4 font-josefin text-gray-400 text-xs whitespace-nowrap">{formatDate(tsToDate(req.createdAt))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

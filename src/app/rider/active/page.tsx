@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Phone, MessageCircle, Check, Camera } from "lucide-react";
+import { Phone, MessageCircle, Check, Camera, Package, MapPin } from "lucide-react";
 import Button from "@/components/ui/Button";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 import toast from "react-hot-toast";
@@ -129,7 +129,7 @@ export default function ActiveDeliveryPage() {
     return (
       <div className="max-w-2xl">
         <div className="card text-center py-16">
-          <p className="text-4xl mb-3">🛵</p>
+          <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="font-outfit font-bold text-navy text-lg mb-2">No Active Delivery</p>
           <p className="font-josefin text-gray-400 text-sm mb-6">
             You don&apos;t have an active order right now. Check available orders to accept one.
@@ -209,7 +209,7 @@ export default function ActiveDeliveryPage() {
             </div>
           )}
           <div className="flex items-start gap-2">
-            <span className="text-orange flex-shrink-0">📍</span>
+            <MapPin className="w-4 h-4 text-orange flex-shrink-0" />
             <span className="font-josefin text-gray-500 flex-shrink-0">Delivery:</span>
             <span className="font-josefin font-semibold text-navy">{order.deliveryAddress}</span>
           </div>
@@ -236,8 +236,8 @@ export default function ActiveDeliveryPage() {
             <label className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-orange transition-colors">
               <Camera className="w-6 h-6 text-gray-400" />
               <div>
-                <p className="font-josefin font-semibold text-navy text-sm">
-                  {photoUploaded ? "✅ Photo uploaded" : "Upload delivery photo"}
+                <p className="font-josefin font-semibold text-navy text-sm flex items-center gap-1">
+                  {photoUploaded && <Check className="w-4 h-4 text-green-500" />} {photoUploaded ? "Photo uploaded" : "Upload delivery photo"}
                 </p>
                 <p className="font-josefin text-gray-400 text-xs">Take a photo of the delivered items</p>
               </div>
@@ -259,7 +259,7 @@ export default function ActiveDeliveryPage() {
 
       {currentStep === "done" && (
         <div className="text-center mt-4">
-          <p className="font-outfit font-bold text-green-600 text-xl">+KES {order.riderPayout ?? 120} earned! 🎉</p>
+          <p className="font-outfit font-bold text-green-600 text-xl">+KES {order.riderPayout ?? 120} earned!</p>
           {isBikeToBoat && (
             <p className="font-josefin text-gray-400 text-sm mt-1">Handed to boat operator at jetty</p>
           )}

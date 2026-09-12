@@ -16,7 +16,7 @@ export const paymentsOpenApiSpec = {
     version: "1.0.0",
     description:
       "M-Pesa payments module. Every endpoint below is a REAL call against this deployment. " +
-      "⚠️ stkpush and query can move real money if this environment's MPESA_ENV=production. " +
+      "stkpush and query can move real money if this environment's MPESA_ENV=production. " +
       "Use the 'Authorize' button (top right) with a Firebase ID token — see the copy-token " +
       "helper above this widget on the /admin/api-docs page.",
   },
@@ -129,7 +129,7 @@ export const paymentsOpenApiSpec = {
       post: {
         summary: "Initiate an STK push for an order",
         description:
-          "⚠️ MONEY-MOVING. Charges the order's server-side total (never the amount in this request body) to the phone number provided. " +
+          "MONEY-MOVING. Charges the order's server-side total (never the amount in this request body) to the phone number provided. " +
           "Requires the caller to own the order. Idempotent for ~90s — a repeat call for the same orderId while one attempt is in flight reuses it instead of sending a second prompt.",
         tags: ["Customer"],
         security: [{ bearerAuth: [] }],
@@ -181,7 +181,7 @@ export const paymentsOpenApiSpec = {
     "/api/payments/mpesa/query": {
       post: {
         summary: "Admin: manually re-query Safaricom for a payment's real status",
-        description: "⚠️ Talks to Safaricom. Use when a payment is stuck PENDING and the callback never arrived. Admin-only.",
+        description: "Talks to Safaricom. Use when a payment is stuck PENDING and the callback never arrived. Admin-only.",
         tags: ["Admin"],
         security: [{ bearerAuth: [] }],
         requestBody: {

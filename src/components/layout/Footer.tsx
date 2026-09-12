@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { MapPin, Phone, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -100,10 +101,10 @@ export default function Footer() {
           <div>
             <h3 className="font-outfit font-bold text-sm uppercase tracking-wider text-navy-300 mb-4">Contact</h3>
             <ul className="space-y-3 text-sm font-josefin text-navy-200">
-              <li>📍 Lamu Island, Kenya</li>
-              <li>📞 <a href="tel:+254707132823" className="hover:text-orange transition-colors">+254 707 132 823</a></li>
-              <li>📞 <a href="tel:+254740875071" className="hover:text-orange transition-colors">+254 740 875 071</a></li>
-              <li>✉️ <a href="mailto:hello@okoatime.avytria.com" className="hover:text-orange transition-colors">hello@okoatime.avytria.com</a></li>
+              <li className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /> Lamu Island, Kenya</li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4 flex-shrink-0" /> <a href="tel:+254707132823" className="hover:text-orange transition-colors">+254 707 132 823</a></li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4 flex-shrink-0" /> <a href="tel:+254740875071" className="hover:text-orange transition-colors">+254 740 875 071</a></li>
+              <li className="flex items-center gap-2"><Mail className="w-4 h-4 flex-shrink-0" /> <a href="mailto:hello@okoatime.avytria.com" className="hover:text-orange transition-colors">hello@okoatime.avytria.com</a></li>
               <li className="pt-2">
                 <div className="text-xs text-navy-300 uppercase tracking-wider mb-2">Areas Served</div>
                 <div className="flex flex-wrap gap-2">
