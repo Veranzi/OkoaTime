@@ -37,6 +37,7 @@ export const AdminListPaymentsQuerySchema = z.object({
   search: z.string().optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
+  cursor: z.string().optional(),
 });
 
 export const RetryQuerySchema = z.object({

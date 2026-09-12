@@ -8,8 +8,10 @@ import {
   findPaymentByCheckoutRequestId,
   getPaymentById,
   listPayments as repoListPayments,
+  listAllPaymentsForExport as repoListAllPaymentsForExport,
   recordStkPushOutcome,
   type ListPaymentsFilters,
+  type ListPaymentsResult,
 } from "../repository/payment.repository";
 import { submitStkPush } from "./mpesa-stkpush.service";
 import { queryStkStatus } from "./mpesa-query.service";
@@ -206,6 +208,12 @@ export async function retryStatusQuery(paymentId: string): Promise<Payment> {
   return (await getPaymentById(paymentId)) ?? payment;
 }
 
-export async function listPayments(filters: ListPaymentsFilters): Promise<Payment[]> {
+export async function listPayments(filters: ListPaymentsFilters): Promise<ListPaymentsResult> {
   return repoListPayments(filters);
+}
+
+export async function listAllPaymentsForExport(
+  filters: Pick<ListPaymentsFilters, "status" | "search" | "startDate" | "endDate">
+): Promise<{ payments: Payment[]; truncated: boolean }> {
+  return repoListAllPaymentsForExport(filters);
 }

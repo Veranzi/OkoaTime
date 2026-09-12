@@ -51,13 +51,17 @@ export default function AdminPaymentsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  function buildFilterParams() {
+  function buildFilterParams(cursor?: string) {
     const params = new URLSearchParams();
     if (statusFilter !== "all") params.set("status", statusFilter);
     if (search) params.set("search", search);
     if (startDate) params.set("startDate", new Date(startDate).toISOString());
     if (endDate) params.set("endDate", new Date(endDate).toISOString());
+    if (cursor) params.set("cursor", cursor);
     return params;
   }
 
@@ -66,9 +70,17 @@ export default function AdminPaymentsPage() {
     try {
       const headers = await authHeaders();
       const res = await fetch(`/api/payments/admin/list?${buildFilterParams().toString()}`, { headers });
-      const data = (await res.json()) as { success: boolean; payments?: Payment[]; message?: string };
+      const data = (await res.json()) as {
+        success: boolean;
+        payments?: Payment[];
+        hasMore?: boolean;
+        nextCursor?: string | null;
+        message?: string;
+      };
       if (data.success && data.payments) {
         setPayments(data.payments);
+        setHasMore(data.hasMore ?? false);
+        setNextCursor(data.nextCursor ?? null);
       } else {
         toast.error(data.message ?? "Failed to load payment records");
       }
@@ -76,6 +88,33 @@ export default function AdminPaymentsPage() {
       toast.error("Network error loading payment records");
     } finally {
       setPaymentsLoading(false);
+    }
+  }
+
+  async function loadMorePayments() {
+    if (!nextCursor) return;
+    setLoadingMore(true);
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`/api/payments/admin/list?${buildFilterParams(nextCursor).toString()}`, { headers });
+      const data = (await res.json()) as {
+        success: boolean;
+        payments?: Payment[];
+        hasMore?: boolean;
+        nextCursor?: string | null;
+        message?: string;
+      };
+      if (data.success && data.payments) {
+        setPayments((prev) => [...prev, ...data.payments!]);
+        setHasMore(data.hasMore ?? false);
+        setNextCursor(data.nextCursor ?? null);
+      } else {
+        toast.error(data.message ?? "Failed to load more payment records");
+      }
+    } catch {
+      toast.error("Network error loading more payment records");
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -94,6 +133,9 @@ export default function AdminPaymentsPage() {
       if (!res.ok) {
         toast.error("Export failed");
         return;
+      }
+      if (res.headers.get("X-Export-Truncated") === "true") {
+        toast.error("Export hit the row cap — narrow the date range to get every record");
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -358,6 +400,13 @@ export default function AdminPaymentsPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        {hasMore && (
+          <div className="p-4 border-t border-gray-100 flex justify-center">
+            <Button variant="outline" size="sm" onClick={loadMorePayments} loading={loadingMore}>
+              Load More
+            </Button>
           </div>
         )}
       </div>

@@ -13,6 +13,7 @@ import {
   getPaymentStatusByCheckoutRequestId,
   initiatePayment,
   listPayments,
+  listAllPaymentsForExport,
   retryStatusQuery,
 } from "../services/payment.service";
 import { PaymentError } from "../utils/errors.util";
@@ -125,15 +126,21 @@ function parseListFilters(req: NextRequest) {
     search: sp.get("search") ?? undefined,
     startDate: sp.get("startDate") ?? undefined,
     endDate: sp.get("endDate") ?? undefined,
+    cursor: sp.get("cursor") ?? undefined,
   });
 }
 
 export async function listPaymentsHandler(req: NextRequest): Promise<NextResponse> {
   try {
     await requireAdmin(req);
-    const filters = parseListFilters(req);
-    const payments = await listPayments(filters);
-    return NextResponse.json({ success: true, payments: payments.map(serializePayment) });
+    const { cursor, ...filters } = parseListFilters(req);
+    const { payments, hasMore, nextCursor } = await listPayments({ ...filters, cursorId: cursor });
+    return NextResponse.json({
+      success: true,
+      payments: payments.map(serializePayment),
+      hasMore,
+      nextCursor,
+    });
   } catch (err) {
     return errorResponse(err);
   }
@@ -147,8 +154,7 @@ function toCsvValue(value: unknown): string {
 export async function exportPaymentsHandler(req: NextRequest): Promise<NextResponse> {
   try {
     await requireAdmin(req);
-    const filters = parseListFilters(req);
-    const payments = await listPayments(filters);
+    const { payments, truncated } = await listAllPaymentsForExport(parseListFilters(req));
 
     const header = [
       "id",
@@ -184,6 +190,7 @@ export async function exportPaymentsHandler(req: NextRequest): Promise<NextRespo
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="okoatime-payments.csv"`,
+        "X-Export-Truncated": String(truncated),
       },
     });
   } catch (err) {

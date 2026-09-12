@@ -232,15 +232,29 @@ export interface ListPaymentsFilters {
   startDate?: Date;
   endDate?: Date;
   limitCount?: number;
+  /** Payment id to resume after — the last row of the previous page. */
+  cursorId?: string;
 }
 
+export interface ListPaymentsResult {
+  payments: Payment[];
+  hasMore: boolean;
+  /** Pass back as `cursorId` to fetch the next page. Null when hasMore is false. */
+  nextCursor: string | null;
+}
+
+const DEFAULT_PAGE_SIZE = 500;
+
 /**
- * Queries by a single field (createdAt range) so no composite Firestore
- * index is required, then filters status/search in memory. Fine at current
- * volume; if this needs to scale further, add a composite index on
- * (status, createdAt) and push the status filter into the query.
+ * Raw, unfiltered Firestore page (createdAt range only — status/search are
+ * applied in memory afterward, see applyInMemoryFilters). Kept separate from
+ * status/search filtering so pagination cursors stay correct regardless of
+ * how many rows in a page get filtered out client-side.
  */
-export async function listPayments(filters: ListPaymentsFilters = {}): Promise<Payment[]> {
+async function fetchPaymentsPage(
+  filters: Pick<ListPaymentsFilters, "startDate" | "endDate" | "cursorId">,
+  pageSize: number
+): Promise<{ payments: Payment[]; hasMore: boolean; nextCursor: string | null }> {
   let query: FirebaseFirestore.Query = paymentsCol().orderBy("createdAt", "desc");
 
   if (filters.startDate) {
@@ -249,17 +263,30 @@ export async function listPayments(filters: ListPaymentsFilters = {}): Promise<P
   if (filters.endDate) {
     query = query.where("createdAt", "<=", Timestamp.fromDate(filters.endDate));
   }
-  query = query.limit(filters.limitCount ?? 500);
+  if (filters.cursorId) {
+    const cursorSnap = await paymentsCol().doc(filters.cursorId).get();
+    if (cursorSnap.exists) query = query.startAfter(cursorSnap);
+  }
+  query = query.limit(pageSize);
 
   const snap = await query.get();
-  let payments = snap.docs.map((d) => toPayment(d.id, d.data()));
+  const payments = snap.docs.map((d) => toPayment(d.id, d.data()));
+  const hasMore = snap.docs.length === pageSize;
+  const nextCursor = hasMore ? snap.docs[snap.docs.length - 1].id : null;
+  return { payments, hasMore, nextCursor };
+}
 
+function applyInMemoryFilters(
+  payments: Payment[],
+  filters: Pick<ListPaymentsFilters, "status" | "search">
+): Payment[] {
+  let out = payments;
   if (filters.status) {
-    payments = payments.filter((p) => p.status === filters.status);
+    out = out.filter((p) => p.status === filters.status);
   }
   if (filters.search) {
     const needle = filters.search.toLowerCase();
-    payments = payments.filter(
+    out = out.filter(
       (p) =>
         p.orderId.toLowerCase().includes(needle) ||
         p.phone.toLowerCase().includes(needle) ||
@@ -267,8 +294,54 @@ export async function listPayments(filters: ListPaymentsFilters = {}): Promise<P
         (p.checkoutRequestId ?? "").toLowerCase().includes(needle)
     );
   }
+  return out;
+}
 
-  return payments;
+/**
+ * One page for the admin UI (500 by default). Queries by createdAt range so
+ * no composite Firestore index is required, then filters status/search in
+ * memory. `hasMore`/`nextCursor` reflect the underlying Firestore page, so
+ * the admin can page through instead of results silently stopping at the
+ * page size — see listAllPaymentsForExport for the unbounded CSV export path.
+ */
+export async function listPayments(filters: ListPaymentsFilters = {}): Promise<ListPaymentsResult> {
+  const pageSize = filters.limitCount ?? DEFAULT_PAGE_SIZE;
+  const { payments, hasMore, nextCursor } = await fetchPaymentsPage(filters, pageSize);
+  return { payments: applyInMemoryFilters(payments, filters), hasMore, nextCursor };
+}
+
+const EXPORT_PAGE_SIZE = 1000;
+const EXPORT_HARD_CAP = 20_000;
+
+/**
+ * Pages through every matching payment instead of stopping at the on-screen
+ * list's page size — otherwise a CSV export silently drops everything past
+ * the first page. Hard-capped at EXPORT_HARD_CAP as a safety valve against
+ * unbounded reads; `truncated` tells the caller to say so.
+ */
+export async function listAllPaymentsForExport(
+  filters: Pick<ListPaymentsFilters, "status" | "search" | "startDate" | "endDate">
+): Promise<{ payments: Payment[]; truncated: boolean }> {
+  const all: Payment[] = [];
+  let cursorId: string | undefined;
+  let truncated = false;
+
+  for (;;) {
+    const remaining = EXPORT_HARD_CAP - all.length;
+    if (remaining <= 0) {
+      truncated = true;
+      break;
+    }
+    const { payments, hasMore, nextCursor } = await fetchPaymentsPage(
+      { startDate: filters.startDate, endDate: filters.endDate, cursorId },
+      Math.min(EXPORT_PAGE_SIZE, remaining)
+    );
+    all.push(...payments);
+    if (!hasMore || !nextCursor) break;
+    cursorId = nextCursor;
+  }
+
+  return { payments: applyInMemoryFilters(all, filters), truncated };
 }
 
 /** Equality-only query (no index needed) for admin reconciliation of stuck attempts. */
