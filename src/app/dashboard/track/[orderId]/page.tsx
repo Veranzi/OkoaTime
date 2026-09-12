@@ -13,6 +13,7 @@ function getTimeline(deliveryType?: DeliveryType): { status: string; label: stri
     return [
       { status: "pending",        label: "Order Placed" },
       { status: "confirmed",      label: "Order Confirmed" },
+      { status: "ready",          label: "Packed & Ready" },
       { status: "boat_assigned",  label: "Boat Captain Assigned" },
       { status: "on_water",       label: "On the Water" },
       { status: "delivered",      label: "Delivered" },
@@ -22,6 +23,7 @@ function getTimeline(deliveryType?: DeliveryType): { status: string; label: stri
     return [
       { status: "pending",        label: "Order Placed" },
       { status: "confirmed",      label: "Order Confirmed" },
+      { status: "ready",          label: "Packed & Ready" },
       { status: "rider_assigned", label: "Rider Assigned" },
       { status: "picked_up",      label: "Rider on the Way" },
       { status: "at_jetty",       label: "At the Jetty" },
@@ -33,6 +35,7 @@ function getTimeline(deliveryType?: DeliveryType): { status: string; label: stri
   return [
     { status: "pending",        label: "Order Placed" },
     { status: "confirmed",      label: "Order Confirmed" },
+    { status: "ready",          label: "Packed & Ready" },
     { status: "rider_assigned", label: "Rider Assigned" },
     { status: "picked_up",      label: "Rider on the Way" },
     { status: "delivered",      label: "Delivered" },
