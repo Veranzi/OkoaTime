@@ -17,6 +17,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://okoatime.avytria.com/sitemap.xml",
+    sitemap: "https://www.okoatime.com/sitemap.xml",
   };
 }

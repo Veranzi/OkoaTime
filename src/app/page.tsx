@@ -18,11 +18,11 @@ export const metadata: Metadata = {
     "delivery Lamu", "Lamu delivery service", "Shela delivery", "Manda Island delivery",
     "M-Pesa delivery", "seafood delivery Lamu", "OkoaTime", "Kenya island delivery",
   ],
-  alternates: { canonical: "https://okoatime.avytria.com" },
+  alternates: { canonical: "https://www.okoatime.com" },
   openGraph: {
     title: "OkoaTime — On-Demand Delivery in Lamu, Kenya",
     description: "Fast delivery across Lamu, Shela & Manda. Pay with M-Pesa. Track live.",
-    url: "https://okoatime.avytria.com",
+    url: "https://www.okoatime.com",
     siteName: "OkoaTime",
     type: "website",
     locale: "en_KE",
@@ -39,10 +39,10 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "LocalBusiness",
-      "@id": "https://okoatime.avytria.com/#business",
+      "@id": "https://www.okoatime.com/#business",
       name: "OkoaTime",
       description: "On-demand delivery platform serving Lamu Town, Shela, and Manda Island, Kenya.",
-      url: "https://okoatime.avytria.com",
+      url: "https://www.okoatime.com",
       telephone: ["+254707132823", "+254740875071"],
       address: {
         "@type": "PostalAddress",
@@ -67,7 +67,7 @@ const jsonLd = {
     {
       "@type": "DeliveryService",
       name: "OkoaTime Delivery",
-      provider: { "@id": "https://okoatime.avytria.com/#business" },
+      provider: { "@id": "https://www.okoatime.com/#business" },
       areaServed: [
         { "@type": "Place", name: "Lamu Town" },
         { "@type": "Place", name: "Shela" },

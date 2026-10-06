@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   description:
     "On-demand delivery platform for Lamu, Shela & Manda Islands. Order seafood, groceries, household items and book boat transport.",
   keywords: ["delivery", "Lamu", "Kenya", "on-demand", "seafood", "M-Pesa"],
-  metadataBase: new URL("https://okoatime.avytria.com"),
+  metadataBase: new URL("https://www.okoatime.com"),
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "OkoaTime — Saving Time, Delivering Convenience.",
     description: "On-demand delivery for Lamu, Shela & Manda Islands. Pay with M-Pesa.",
-    url: "https://okoatime.avytria.com",
+    url: "https://www.okoatime.com",
     siteName: "OkoaTime",
     type: "website",
     locale: "en_KE",
