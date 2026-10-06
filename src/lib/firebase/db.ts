@@ -67,6 +67,7 @@ export interface Order {
   riderLng?: number;
   boatOperatorId?: string;
   boatOperatorName?: string;
+  boatOperatorPayout?: number;
   boatLat?: number;
   boatLng?: number;
   createdAt: unknown;

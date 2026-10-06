@@ -51,6 +51,7 @@ export default function SupplierProductsPage() {
       unit: p.unit,
       description: p.description,
       ...(p.suggestedPrice > 0 ? { price: p.suggestedPrice } : {}),
+      ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
     });
     setModalOpen(true);
   }

@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import { DollarSign, TrendingUp, Users, Phone, Clock, Check, X } from "lucide-react";
-import { formatKES, formatDate } from "@/lib/utils";
+import { formatKES, formatDate, boatPayoutFor } from "@/lib/utils";
 import { StatCard } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { getBookingsByBoatOperator, createPayoutRequest, getPayoutRequestsByUser, tsToDate } from "@/lib/firebase/db";
-import type { Booking, PayoutRequest } from "@/lib/firebase/db";
+import { getBookingsByBoatOperator, getWaterDeliveryOrders, createPayoutRequest, getPayoutRequestsByUser, tsToDate } from "@/lib/firebase/db";
+import type { Booking, Order, PayoutRequest } from "@/lib/firebase/db";
 
 const payoutBadge: Record<string, "yellow" | "green" | "red"> = {
   pending: "yellow", paid: "green", rejected: "red",
@@ -22,6 +22,7 @@ const payoutIcon: Record<string, React.ReactNode> = {
 export default function BoatEarningsPage() {
   const { user } = useAuthStore();
   const [history, setHistory] = useState<Booking[]>([]);
+  const [deliveries, setDeliveries] = useState<Order[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [payoutOpen, setPayoutOpen] = useState(false);
@@ -31,8 +32,10 @@ export default function BoatEarningsPage() {
   useEffect(() => {
     if (!user?.uid) return;
     const uid = user.uid;
-    getBookingsByBoatOperator(uid)
-      .then((all) => setHistory(all.filter((b) => b.status === "completed")))
+    Promise.all([
+      getBookingsByBoatOperator(uid).then((all) => setHistory(all.filter((b) => b.status === "completed"))),
+      getWaterDeliveryOrders(uid).then((all) => setDeliveries(all.filter((o) => o.status === "delivered"))),
+    ])
       .catch(console.error)
       .finally(() => setLoading(false));
     getPayoutRequestsByUser(uid)
@@ -44,9 +47,18 @@ export default function BoatEarningsPage() {
   const weekAgo = new Date(now.getTime() - 7 * 86400000);
   const monthAgo = new Date(now.getTime() - 30 * 86400000);
 
-  const weekNet = history.filter((h) => tsToDate(h.createdAt) >= weekAgo).reduce((s, h) => s + h.net, 0);
-  const monthNet = history.filter((h) => tsToDate(h.createdAt) >= monthAgo).reduce((s, h) => s + h.net, 0);
-  const totalNet = history.reduce((s, h) => s + h.net, 0);
+  const deliveryPayout = (o: Order) => o.boatOperatorPayout ?? boatPayoutFor(o);
+
+  const bookingWeekNet = history.filter((h) => tsToDate(h.createdAt) >= weekAgo).reduce((s, h) => s + h.net, 0);
+  const bookingMonthNet = history.filter((h) => tsToDate(h.createdAt) >= monthAgo).reduce((s, h) => s + h.net, 0);
+  const bookingTotalNet = history.reduce((s, h) => s + h.net, 0);
+  const deliveryWeekNet = deliveries.filter((d) => tsToDate(d.createdAt) >= weekAgo).reduce((s, d) => s + deliveryPayout(d), 0);
+  const deliveryMonthNet = deliveries.filter((d) => tsToDate(d.createdAt) >= monthAgo).reduce((s, d) => s + deliveryPayout(d), 0);
+  const deliveryTotalNet = deliveries.reduce((s, d) => s + deliveryPayout(d), 0);
+
+  const weekNet = bookingWeekNet + deliveryWeekNet;
+  const monthNet = bookingMonthNet + deliveryMonthNet;
+  const totalNet = bookingTotalNet + deliveryTotalNet;
   const passengers = history.reduce((s, h) => s + h.passengers, 0);
   const paidOut = payouts.filter((p) => p.status === "paid").reduce((s, p) => s + p.amount, 0);
   const pendingPayout = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + p.amount, 0);
@@ -120,6 +132,34 @@ export default function BoatEarningsPage() {
           </div>
         </div>
       )}
+
+      {/* Delivery History */}
+      <div className="card mb-6">
+        <h3 className="font-outfit font-bold text-navy mb-4">Delivery History</h3>
+        {loading ? (
+          <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-16 bg-gray-50 rounded-xl animate-pulse" />)}</div>
+        ) : deliveries.length === 0 ? (
+          <p className="text-center font-josefin text-gray-400 py-6">No completed deliveries yet</p>
+        ) : (
+          <div className="space-y-3">
+            {deliveries.map((d) => (
+              <div key={d.id} className="flex items-center gap-3 justify-between py-3 border-b border-gray-50 last:border-0">
+                <div className="min-w-0">
+                  <p className="font-josefin text-gray-400 text-xs">{formatDate(tsToDate(d.createdAt))}</p>
+                  <p className="font-outfit font-bold text-navy text-sm truncate">
+                    {d.supplierName ?? "Supplier"} {d.deliveryType === "bike_to_boat" ? "→ jetty → " : "→ "}{d.customerName}
+                  </p>
+                  <p className="font-josefin text-gray-400 text-xs truncate">{d.deliveryAddress}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-outfit font-bold text-green-600">{formatKES(deliveryPayout(d))}</p>
+                  <Badge variant="green" className="mt-1">Delivered</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Booking History */}
       <div className="card">

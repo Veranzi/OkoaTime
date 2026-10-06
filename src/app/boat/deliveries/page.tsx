@@ -1,16 +1,16 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { Phone, RefreshCw, MapPin, Package, Check, Sailboat } from "lucide-react";
+import { Phone, RefreshCw, MapPin, Package, Check, Sailboat, Bike } from "lucide-react";
 import Button from "@/components/ui/Button";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 import Badge from "@/components/ui/Badge";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { getPendingBoatOrders, getDirectBoatOrders, getWaterDeliveryOrders, updateOrderStatus, updateOrder } from "@/lib/firebase/db";
+import { getPendingBoatOrders, getDirectBoatOrders, getWaterDeliveryOrders, updateOrderStatus, updateOrder, tsToDate } from "@/lib/firebase/db";
 import type { Order, OrderStatus } from "@/lib/firebase/db";
-import { formatKES } from "@/lib/utils";
+import { formatKES, formatDate, boatPayoutFor } from "@/lib/utils";
 
-type Tab = "available" | "active";
+type Tab = "available" | "active" | "history";
 
 function statusBadge(status: OrderStatus) {
   if (status === "at_jetty") return <Badge variant="orange">At Jetty</Badge>;
@@ -26,6 +26,7 @@ export default function BoatDeliveriesPage() {
   const [tab, setTab] = useState<Tab>("available");
   const [available, setAvailable] = useState<Order[]>([]);
   const [active, setActive] = useState<Order[]>([]);
+  const [history, setHistory] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [boatPos, setBoatPos] = useState<{ lat: number; lng: number } | null>(null);
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -45,6 +46,7 @@ export default function BoatDeliveriesPage() {
       setAvailable(merged);
       // Active = my assigned orders not yet delivered
       setActive(mine.filter((o) => o.status === "boat_assigned" || o.status === "on_water"));
+      setHistory(mine.filter((o) => o.status === "delivered"));
     } finally {
       setLoading(false);
     }
@@ -82,6 +84,7 @@ export default function BoatDeliveriesPage() {
       await updateOrderStatus(order.id, "boat_assigned", {
         boatOperatorId: user.uid,
         boatOperatorName: user.name,
+        boatOperatorPayout: boatPayoutFor(order),
       });
       toast.success("Delivery accepted!");
       await load();
@@ -103,7 +106,7 @@ export default function BoatDeliveriesPage() {
     } catch { toast.error("Failed to update status"); }
   }
 
-  const orders = tab === "available" ? available : active;
+  const orders = tab === "available" ? available : tab === "active" ? active : history;
 
   return (
     <div className="max-w-3xl">
@@ -121,7 +124,7 @@ export default function BoatDeliveriesPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {(["available", "active"] as Tab[]).map((t) => (
+        {(["available", "active", "history"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -129,7 +132,7 @@ export default function BoatDeliveriesPage() {
               tab === t ? "bg-navy text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
             }`}
           >
-            {t === "available" ? `Available (${available.length})` : `My Active (${active.length})`}
+            {t === "available" ? `Available (${available.length})` : t === "active" ? `My Active (${active.length})` : `History (${history.length})`}
           </button>
         ))}
       </div>
@@ -159,13 +162,45 @@ export default function BoatDeliveriesPage() {
         <div className="card text-center py-12">
           <Sailboat className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="font-outfit font-bold text-navy mb-1">
-            {tab === "available" ? "No deliveries waiting" : "No active deliveries"}
+            {tab === "available" ? "No deliveries waiting" : tab === "active" ? "No active deliveries" : "No deliveries yet"}
           </p>
           <p className="font-josefin text-gray-400 text-sm">
             {tab === "available"
               ? "Orders needing water delivery will appear here."
-              : "Accept an order from the Available tab to get started."}
+              : tab === "active"
+              ? "Accept an order from the Available tab to get started."
+              : "Deliveries you complete will show up here."}
           </p>
+        </div>
+      ) : tab === "history" ? (
+        <div className="card">
+          <div className="space-y-3">
+            {history.map((order) => (
+              <div key={order.id} className="flex items-center gap-3 justify-between py-3 border-b border-gray-50 last:border-0">
+                <div className="min-w-0">
+                  <p className="font-josefin text-gray-400 text-xs">{formatDate(tsToDate(order.createdAt))}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {order.deliveryType === "bike_to_boat" && (
+                      <span className="inline-flex items-center gap-1 text-gray-400" title="Handed off from rider at the jetty">
+                        <Bike className="w-3.5 h-3.5" />
+                      </span>
+                    )}
+                    <p className="font-outfit font-bold text-navy text-sm truncate">
+                      {order.supplierName ?? "Supplier"} {order.deliveryType === "bike_to_boat" ? "→ jetty → " : "→ "}{order.customerName}
+                    </p>
+                  </div>
+                  <p className="font-josefin text-gray-400 text-xs truncate">
+                    {order.deliveryType === "bike_to_boat" && order.riderName ? `Handoff from ${order.riderName} · ` : ""}
+                    {order.deliveryAddress}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-outfit font-bold text-green-600">{formatKES(order.boatOperatorPayout ?? boatPayoutFor(order))}</p>
+                  <Badge variant="green" className="mt-1">Delivered</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="space-y-4">

@@ -91,6 +91,27 @@ export const SUBCATEGORY_SEEDS: Record<ProductCategory, string[]> = {
   household: ["powder soaps", "detergents", "cleaning supplies", "toiletries", "paper products", "kitchenware"],
 };
 
+// Delivery-fee split between courier roles. A plain "bike" job or a direct
+// "boat" job (no rider involved) pays the courier who does the whole leg 70%
+// of the delivery fee — OkoaTime keeps 30%. A "bike_to_boat" handoff splits
+// that same 70% across both legs instead of paying it twice: the rider keeps
+// 40% for pickup-to-jetty, the boat operator gets 30% for jetty-to-client.
+// OkoaTime's 30% cut is unchanged either way.
+export const RIDER_SHARE = 0.7;
+export const RIDER_SHARE_HANDOFF = 0.4;
+export const BOAT_SHARE = 0.7;
+export const BOAT_SHARE_HANDOFF = 0.3;
+
+export function riderPayoutFor(order: { deliveryFee: number; deliveryType?: string }): number {
+  const share = order.deliveryType === "bike_to_boat" ? RIDER_SHARE_HANDOFF : RIDER_SHARE;
+  return Math.round(order.deliveryFee * share);
+}
+
+export function boatPayoutFor(order: { deliveryFee: number; deliveryType?: string }): number {
+  const share = order.deliveryType === "bike_to_boat" ? BOAT_SHARE_HANDOFF : BOAT_SHARE;
+  return Math.round(order.deliveryFee * share);
+}
+
 export function generateOrderId(): string {
   const prefix = "OT";
   const timestamp = Date.now().toString(36).toUpperCase();

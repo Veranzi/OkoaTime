@@ -12,6 +12,7 @@ export interface ProposedProduct {
   unit: string;
   suggestedPrice: number;
   description: string;
+  imageUrl?: string;
 }
 
 interface ChatMessage {
@@ -75,9 +76,13 @@ export default function ProductAiAssistant({ onUseProduct }: { onUseProduct: (p:
       });
       const data = (await res.json()) as { reply?: string; products?: ProposedProduct[]; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Assistant failed");
+      const products = (data.products ?? []).map((p) => ({
+        ...p,
+        imageUrl: userMsg.imageUrl ?? p.imageUrl,
+      }));
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: data.reply ?? "", products: data.products ?? [] },
+        { role: "assistant", text: data.reply ?? "", products },
       ]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Assistant failed");

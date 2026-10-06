@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { MapPin, Package, RefreshCw, Search } from "lucide-react";
-import { formatKES, formatRelative } from "@/lib/utils";
+import { formatKES, formatRelative, riderPayoutFor } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
@@ -9,8 +9,6 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getPendingOrders, updateOrderStatus, tsToDate } from "@/lib/firebase/db";
 import type { Order } from "@/lib/firebase/db";
-
-const RIDER_SHARE = 0.7; // rider gets 70%, OkoaTime keeps 30% of delivery fee
 
 const DELIVERY_BADGE: Record<string, string> = {
   bike: "Bike",
@@ -46,7 +44,7 @@ export default function RiderOrdersPage() {
       await updateOrderStatus(order.id, "rider_assigned", {
         riderId: user.uid,
         riderName: user.name,
-        riderPayout: Math.round(order.deliveryFee * RIDER_SHARE), // OkoaTime keeps 30%
+        riderPayout: riderPayoutFor(order),
       });
       toast.success("Order accepted! Head to the supplier.");
       router.push("/rider/active");
@@ -112,7 +110,7 @@ export default function RiderOrdersPage() {
                 <div className="text-right">
                   <p className="font-josefin text-gray-400 text-xs">Your payout</p>
                   <p className="font-outfit font-bold text-green-600 text-lg">
-                    {formatKES(Math.round(order.deliveryFee * RIDER_SHARE))}
+                    {formatKES(riderPayoutFor(order))}
                   </p>
                 </div>
               </div>
@@ -154,7 +152,7 @@ export default function RiderOrdersPage() {
                 loading={accepting === order.id}
                 onClick={() => acceptOrder(order)}
               >
-                Accept — {formatKES(Math.round(order.deliveryFee * RIDER_SHARE))} payout
+                Accept — {formatKES(riderPayoutFor(order))} payout
               </Button>
             </div>
           ))}
