@@ -67,10 +67,16 @@ export default function Footer() {
           <div>
             <h3 className="font-outfit font-bold text-sm uppercase tracking-wider text-navy-300 mb-4">Services</h3>
             <ul className="space-y-2">
-              {["Seafood Delivery", "House Shopping", "Fruits & Vegetables", "Household Items", "Boat Transport"].map((s) => (
-                <li key={s}>
-                  <Link href="/dashboard/order/new" className="text-navy-200 hover:text-orange font-josefin text-sm transition-colors">
-                    {s}
+              {[
+                { label: "Seafood Delivery", href: "/seafood-delivery-lamu" },
+                { label: "House Shopping", href: "/grocery-delivery-shela" },
+                { label: "Fruits & Vegetables", href: "/grocery-delivery-shela" },
+                { label: "Household Items", href: "/grocery-delivery-shela" },
+                { label: "Boat Transport", href: "/boat-transport-lamu" },
+              ].map((s) => (
+                <li key={s.label}>
+                  <Link href={s.href} className="text-navy-200 hover:text-orange font-josefin text-sm transition-colors">
+                    {s.label}
                   </Link>
                 </li>
               ))}
@@ -84,8 +90,8 @@ export default function Footer() {
               {[
                 { label: "About Us", href: "/#about" },
                 { label: "How It Works", href: "/#how-it-works" },
-                { label: "Become a Supplier", href: "/register" },
-                { label: "Become a Rider", href: "/register" },
+                { label: "Become a Supplier", href: "/sell-on-okoatime" },
+                { label: "Become a Rider", href: "/become-a-rider" },
                 { label: "Contact Us", href: "/#contact" },
               ].map((l) => (
                 <li key={l.label}>

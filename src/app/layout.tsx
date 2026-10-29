@@ -30,10 +30,6 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.okoatime.com"),
   applicationName: "OkoaTime",
   formatDetection: { telephone: false },
-  icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
-  },
   openGraph: {
     title: "OkoaTime — Saving Time, Delivering Convenience.",
     description: "On-demand delivery for Lamu, Shela & Manda Islands. Pay with M-Pesa.",

@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { SEO_PAGES } from "@/lib/seo-pages";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -8,6 +9,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1,
     },
+    ...Object.keys(SEO_PAGES).map((slug) => ({
+      url: `https://www.okoatime.com/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
     {
       url: "https://www.okoatime.com/return-policy",
       lastModified: new Date(),

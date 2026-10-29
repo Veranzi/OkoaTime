@@ -43,15 +43,11 @@ const sections = [
     ],
   },
   {
-    title: "6. Cash on Delivery Orders",
-    body: `For cash-on-delivery orders, you are entitled to inspect items before paying. If you are not satisfied with the condition of a product, you may refuse that specific item before payment and it will be returned to the supplier.`,
-  },
-  {
-    title: "7. M-Pesa Refunds",
+    title: "6. M-Pesa Refunds",
     body: `Approved M-Pesa refunds are processed within 24 hours of the resolution being confirmed. You will receive an M-Pesa notification once the reversal is complete. OkoaTime does not charge any fees for processing refunds.`,
   },
   {
-    title: "8. Contact Us",
+    title: "7. Contact Us",
     body: `For any questions about this policy, reach us at:\n+254 707 132 823\n+254 740 875 071\ninfo@okoatime.com\nLamu Island, Kenya`,
   },
 ];

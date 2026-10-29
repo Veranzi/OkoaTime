@@ -29,10 +29,10 @@ const sections = [
   {
     title: "4. Ordering & Payment",
     items: [
-      "Orders are confirmed only after successful payment or acceptance of a cash-on-delivery order.",
+      "Orders are confirmed only after successful M-Pesa payment.",
       "Prices displayed include all applicable charges unless otherwise stated.",
-      "M-Pesa payments are processed securely via Safaricom's STK push.",
-      "Cash on delivery is available for eligible orders and service areas.",
+      "All payments are made via M-Pesa, either by Safaricom's STK push or to the OkoaTime Till number.",
+      "Cash on delivery is not available.",
       "OkoaTime charges a 10% platform commission on item subtotals and retains 30% of delivery fees.",
     ],
   },
@@ -88,7 +88,7 @@ export default function TermsPage() {
             <span className="font-outfit font-bold text-white text-lg">Okoa<span className="text-orange">Time</span></span>
           </Link>
           <h1 className="font-outfit font-black text-white text-3xl sm:text-4xl mb-2">Terms of Service</h1>
-          <p className="font-josefin text-navy-300 text-sm text-gray-300">Last updated: May 2026</p>
+          <p className="font-josefin text-navy-300 text-sm text-gray-300">Last updated: October 2026</p>
         </div>
       </div>
 

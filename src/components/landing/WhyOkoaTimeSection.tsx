@@ -12,7 +12,7 @@ const benefits = [
   {
     icon: Smartphone,
     title: "M-Pesa Payments",
-    description: "Pay securely via M-Pesa STK Push or cash on delivery. No card needed.",
+    description: "Pay securely via M-Pesa STK Push or our M-Pesa Till. No card needed.",
     bgColor: "bg-green-50",
   },
   {
