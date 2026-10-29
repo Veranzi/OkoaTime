@@ -1,7 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export const metadata = { title: "Privacy Policy — OkoaTime" };
+export const metadata = {
+  title: "Privacy Policy",
+  description: "How OkoaTime collects, uses and protects your personal data when you order deliveries in Lamu, Shela and Manda Island.",
+  alternates: { canonical: "/privacy" },
+};
 
 const sections = [
   {

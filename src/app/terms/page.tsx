@@ -1,7 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export const metadata = { title: "Terms of Service — OkoaTime" };
+export const metadata = {
+  title: "Terms of Service",
+  description: "The terms that apply when you use OkoaTime to order deliveries, book boat transport or sell as a supplier in Lamu.",
+  alternates: { canonical: "/terms" },
+};
 
 const sections = [
   {

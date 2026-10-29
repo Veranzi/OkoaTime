@@ -1,7 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export const metadata = { title: "Return & Refund Policy — OkoaTime" };
+export const metadata = {
+  title: "Return & Refund Policy",
+  description: "How returns and M-Pesa refunds work for OkoaTime orders, including damaged, missing or late deliveries.",
+  alternates: { canonical: "/return-policy" },
+};
 
 const sections = [
   {

@@ -38,8 +38,18 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "WebSite",
+      "@id": "https://www.okoatime.com/#website",
+      name: "OkoaTime",
+      url: "https://www.okoatime.com",
+      publisher: { "@id": "https://www.okoatime.com/#business" },
+      inLanguage: "en-KE",
+    },
+    {
       "@type": "LocalBusiness",
       "@id": "https://www.okoatime.com/#business",
+      logo: "https://www.okoatime.com/okoatimereallogo.png",
+      image: "https://www.okoatime.com/opengraph-image",
       name: "OkoaTime",
       description: "On-demand delivery platform serving Lamu Town, Shela, and Manda Island, Kenya.",
       url: "https://www.okoatime.com",

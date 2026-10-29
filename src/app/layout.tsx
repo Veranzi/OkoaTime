@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Josefin_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
@@ -28,6 +28,8 @@ export const metadata: Metadata = {
     "On-demand delivery platform for Lamu, Shela & Manda Islands. Order seafood, groceries, household items and book boat transport.",
   keywords: ["delivery", "Lamu", "Kenya", "on-demand", "seafood", "M-Pesa"],
   metadataBase: new URL("https://www.okoatime.com"),
+  applicationName: "OkoaTime",
+  formatDetection: { telephone: false },
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
@@ -45,6 +47,10 @@ export const metadata: Metadata = {
     title: "OkoaTime — Saving Time, Delivering Convenience.",
     description: "On-demand delivery for Lamu, Shela & Manda Islands. Pay with M-Pesa.",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#001F5B",
 };
 
 export default function RootLayout({
