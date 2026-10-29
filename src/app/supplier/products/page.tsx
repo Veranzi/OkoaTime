@@ -11,6 +11,13 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getProductsBySupplier, addProduct, updateProduct, deleteProduct } from "@/lib/firebase/db";
 import type { Product } from "@/lib/firebase/db";
 import ProductAiAssistant, { type ProposedProduct } from "@/components/supplier/ProductAiAssistant";
+import PartnerRateBanner from "@/components/pricing/PartnerRateBanner";
+import { useMyRates } from "@/hooks/usePlatformRates";
+
+/** What a supplier receives per unit after OkoaTime's commission. */
+function netOf(price: number, commissionPct: number): number {
+  return price - Math.round((price * commissionPct) / 100);
+}
 
 type DraftProduct = Partial<Omit<Product, "id" | "supplierId" | "supplierName" | "createdAt">>;
 
@@ -25,6 +32,8 @@ export default function SupplierProductsPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const { rates, promo, loaded: ratesLoaded } = useMyRates();
+  const commissionPct = rates.commissionRate;
 
   async function load() {
     if (!user?.uid) return;
@@ -191,6 +200,8 @@ export default function SupplierProductsPage() {
         </Button>
       </div>
 
+      <PartnerRateBanner role="supplier" rates={rates} promo={promo} loaded={ratesLoaded} />
+
       <ProductAiAssistant onUseProduct={useProposedProduct} />
 
       <div className="relative mb-6">
@@ -241,6 +252,9 @@ export default function SupplierProductsPage() {
                   <div>
                     <p className="font-outfit font-bold text-orange text-lg">{formatKES(product.price)}</p>
                     <p className="font-josefin text-gray-400 text-xs">per {product.unit}</p>
+                    {ratesLoaded && (
+                      <p className="font-josefin text-green-600 text-xs">You receive {formatKES(netOf(product.price, commissionPct))}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <button onClick={() => openEdit(product)} className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors">
@@ -301,6 +315,21 @@ export default function SupplierProductsPage() {
             value={draft.price ?? ""}
             onChange={(e) => setDraft((p) => ({ ...p, price: Number(e.target.value) }))}
           />
+          {ratesLoaded && (draft.price ?? 0) > 0 && (
+            <div className="bg-gray-50 rounded-xl p-3 font-josefin text-sm space-y-1">
+              <div className="flex justify-between text-gray-600">
+                <span>Customer pays</span><span>{formatKES(draft.price!)}</span>
+              </div>
+              <div className="flex justify-between text-red-400">
+                <span>OkoaTime commission ({commissionPct}%{promo ? " · promo" : ""})</span>
+                <span>−{formatKES(draft.price! - netOf(draft.price!, commissionPct))}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-green-600 border-t border-gray-200 pt-1">
+                <span>You receive</span><span>{formatKES(netOf(draft.price!, commissionPct))}</span>
+              </div>
+              <p className="text-gray-400 text-xs">Per unit, at today&apos;s rate. The rate on each order is fixed when the order is placed.</p>
+            </div>
+          )}
           <Input
             label="Unit"
             placeholder="e.g., piece, kg, pack"

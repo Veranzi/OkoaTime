@@ -8,7 +8,10 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getPendingOrders, updateOrderStatus, tsToDate } from "@/lib/firebase/db";
+import { getMyRates } from "@/lib/pricing-client";
 import type { Order } from "@/lib/firebase/db";
+import { useMyRates } from "@/hooks/usePlatformRates";
+import PartnerRateBanner from "@/components/pricing/PartnerRateBanner";
 
 const DELIVERY_BADGE: Record<string, string> = {
   bike: "Bike",
@@ -21,6 +24,7 @@ export default function RiderOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState<string | null>(null);
+  const { rates, promo, loaded: ratesLoaded } = useMyRates();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,10 +45,12 @@ export default function RiderOrdersPage() {
     if (!user?.uid) return toast.error("Session expired — please sign in again.");
     setAccepting(order.id);
     try {
+      // Fetch fresh so the recorded payout always uses admin's current rates.
+      const currentRates = (await getMyRates()).rates;
       await updateOrderStatus(order.id, "rider_assigned", {
         riderId: user.uid,
         riderName: user.name,
-        riderPayout: riderPayoutFor(order),
+        riderPayout: riderPayoutFor(order, currentRates),
       });
       toast.success("Order accepted! Head to the supplier.");
       router.push("/rider/active");
@@ -69,6 +75,8 @@ export default function RiderOrdersPage() {
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
+
+      <PartnerRateBanner role="rider" rates={rates} promo={promo} loaded={ratesLoaded} />
 
       {loading ? (
         <div className="space-y-4">
@@ -110,7 +118,7 @@ export default function RiderOrdersPage() {
                 <div className="text-right">
                   <p className="font-josefin text-gray-400 text-xs">Your payout</p>
                   <p className="font-outfit font-bold text-green-600 text-lg">
-                    {formatKES(riderPayoutFor(order))}
+                    {formatKES(riderPayoutFor(order, rates))}
                   </p>
                 </div>
               </div>
@@ -152,7 +160,7 @@ export default function RiderOrdersPage() {
                 loading={accepting === order.id}
                 onClick={() => acceptOrder(order)}
               >
-                Accept — {formatKES(riderPayoutFor(order))} payout
+                Accept — {formatKES(riderPayoutFor(order, rates))} payout
               </Button>
             </div>
           ))}

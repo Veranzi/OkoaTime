@@ -91,25 +91,75 @@ export const SUBCATEGORY_SEEDS: Record<ProductCategory, string[]> = {
   household: ["powder soaps", "detergents", "cleaning supplies", "toiletries", "paper products", "kitchenware"],
 };
 
-// Delivery-fee split between courier roles. A plain "bike" job or a direct
-// "boat" job (no rider involved) pays the courier who does the whole leg 70%
-// of the delivery fee — OkoaTime keeps 30%. A "bike_to_boat" handoff splits
-// that same 70% across both legs instead of paying it twice: the rider keeps
-// 40% for pickup-to-jetty, the boat operator gets 30% for jetty-to-client.
-// OkoaTime's 30% cut is unchanged either way.
-export const RIDER_SHARE = 0.7;
-export const RIDER_SHARE_HANDOFF = 0.4;
-export const BOAT_SHARE = 0.7;
-export const BOAT_SHARE_HANDOFF = 0.3;
-
-export function riderPayoutFor(order: { deliveryFee: number; deliveryType?: string }): number {
-  const share = order.deliveryType === "bike_to_boat" ? RIDER_SHARE_HANDOFF : RIDER_SHARE;
-  return Math.round(order.deliveryFee * share);
+// Platform rates, all whole percentages, set by admin in /admin/settings and
+// stored in Firestore at settings/platform. These defaults apply until admin
+// saves the settings for the first time.
+//
+// commissionRate: OkoaTime's cut of each order's item subtotal (a supplier's
+// own `commission` field overrides it).
+// Delivery-fee split: a plain "bike" job or a direct "boat" job pays the
+// courier who does the whole leg riderShare/boatShare. A "bike_to_boat"
+// handoff splits the fee across both legs instead of paying it twice:
+// riderShareHandoff for pickup-to-jetty, boatShareHandoff for jetty-to-client.
+// OkoaTime keeps whatever is left of the delivery fee.
+export interface PlatformRates {
+  commissionRate: number;
+  riderShare: number;
+  riderShareHandoff: number;
+  boatShare: number;
+  boatShareHandoff: number;
 }
 
-export function boatPayoutFor(order: { deliveryFee: number; deliveryType?: string }): number {
-  const share = order.deliveryType === "bike_to_boat" ? BOAT_SHARE_HANDOFF : BOAT_SHARE;
-  return Math.round(order.deliveryFee * share);
+export const DEFAULT_PLATFORM_RATES: PlatformRates = {
+  commissionRate: 10,
+  riderShare: 70,
+  riderShareHandoff: 40,
+  boatShare: 70,
+  boatShareHandoff: 30,
+};
+
+type FeeOrder = { deliveryFee: number; deliveryType?: string };
+
+export function riderPayoutFor(order: FeeOrder, rates: PlatformRates = DEFAULT_PLATFORM_RATES): number {
+  const share = order.deliveryType === "bike_to_boat" ? rates.riderShareHandoff : rates.riderShare;
+  return Math.round((order.deliveryFee * share) / 100);
+}
+
+export function boatPayoutFor(order: FeeOrder, rates: PlatformRates = DEFAULT_PLATFORM_RATES): number {
+  const share = order.deliveryType === "bike_to_boat" ? rates.boatShareHandoff : rates.boatShare;
+  return Math.round((order.deliveryFee * share) / 100);
+}
+
+// Effective item commission (%) for a supplier: their own admin-set rate if
+// they have one, otherwise the platform default.
+export function supplierCommissionRate(supplier: { commission?: number } | null | undefined, rates: PlatformRates): number {
+  return typeof supplier?.commission === "number" ? supplier.commission : rates.commissionRate;
+}
+
+// How an order's money splits between supplier, couriers and OkoaTime. Uses
+// the commission and payouts recorded on the order when present; otherwise
+// estimates them from the given rates. OkoaTime keeps whatever of the
+// delivery fee isn't paid to the rider and/or boat operator, and pays for any
+// customer discount out of its own share.
+export function orderSplit(
+  o: {
+    subtotal: number; deliveryFee?: number; deliveryType?: string; riderPayout?: number;
+    boatOperatorPayout?: number; commissionRate?: number; discountTotal?: number;
+  },
+  rates: PlatformRates,
+  commissionPct: number,
+) {
+  const itemComm     = Math.round((o.subtotal * (o.commissionRate ?? commissionPct)) / 100);
+  const supplierNet  = o.subtotal - itemComm;
+  const deliveryFee  = o.deliveryFee ?? 0;
+  const fee          = { deliveryFee, deliveryType: o.deliveryType };
+  const riderPayout  = o.deliveryType === "boat" ? 0 : (o.riderPayout ?? riderPayoutFor(fee, rates));
+  const boatPayout   = o.deliveryType === "boat" || o.deliveryType === "bike_to_boat"
+    ? (o.boatOperatorPayout ?? boatPayoutFor(fee, rates))
+    : 0;
+  const deliveryComm = deliveryFee - riderPayout - boatPayout;
+  const discounts    = o.discountTotal ?? 0;
+  return { itemComm, supplierNet, deliveryFee, deliveryComm, riderPayout, boatPayout, discounts, okoaRevenue: itemComm + deliveryComm - discounts };
 }
 
 export function generateOrderId(): string {

@@ -26,6 +26,7 @@ export interface UserProfile {
   createdAt: unknown;
   // supplier extras
   businessName?: string;
+  commission?: number; // admin-set item commission %, overrides the platform default
   serviceCategory?: string;
   location?: string;
   // rider extras

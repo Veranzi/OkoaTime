@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { DeliveryType } from "@/lib/firebase/db";
 
 export interface OrderItem {
+  productId?: string; // the server looks the real price up by this
   name: string;
   quantity: number;
   price: number;

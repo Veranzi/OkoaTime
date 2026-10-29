@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getBookingsByBoatOperator, getWaterDeliveryOrders, createPayoutRequest, getPayoutRequestsByUser, tsToDate } from "@/lib/firebase/db";
 import type { Booking, Order, PayoutRequest } from "@/lib/firebase/db";
+import { useMyRates } from "@/hooks/usePlatformRates";
 
 const payoutBadge: Record<string, "yellow" | "green" | "red"> = {
   pending: "yellow", paid: "green", rejected: "red",
@@ -21,6 +22,7 @@ const payoutIcon: Record<string, React.ReactNode> = {
 
 export default function BoatEarningsPage() {
   const { user } = useAuthStore();
+  const { rates } = useMyRates();
   const [history, setHistory] = useState<Booking[]>([]);
   const [deliveries, setDeliveries] = useState<Order[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
@@ -47,7 +49,7 @@ export default function BoatEarningsPage() {
   const weekAgo = new Date(now.getTime() - 7 * 86400000);
   const monthAgo = new Date(now.getTime() - 30 * 86400000);
 
-  const deliveryPayout = (o: Order) => o.boatOperatorPayout ?? boatPayoutFor(o);
+  const deliveryPayout = (o: Order) => o.boatOperatorPayout ?? boatPayoutFor(o, rates);
 
   const bookingWeekNet = history.filter((h) => tsToDate(h.createdAt) >= weekAgo).reduce((s, h) => s + h.net, 0);
   const bookingMonthNet = history.filter((h) => tsToDate(h.createdAt) >= monthAgo).reduce((s, h) => s + h.net, 0);

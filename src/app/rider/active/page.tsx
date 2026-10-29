@@ -7,7 +7,9 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getOrdersByRider, updateOrderStatus, updateOrder } from "@/lib/firebase/db";
+import { getMyRates } from "@/lib/pricing-client";
 import type { Order } from "@/lib/firebase/db";
+import { riderPayoutFor } from "@/lib/utils";
 
 type Step = "navigate_pickup" | "pickup" | "navigate_customer" | "deliver" | "done";
 
@@ -94,13 +96,16 @@ export default function ActiveDeliveryPage() {
 
     if (currentStep === "deliver") {
       if (locationIntervalRef.current) clearInterval(locationIntervalRef.current);
+      // Payout is normally recorded when the order is accepted; only compute
+      // it here (from admin's current rates) for orders that lack one.
+      const riderPayout = order.riderPayout ?? riderPayoutFor(order, (await getMyRates()).rates);
       if (isBikeToBoat) {
         // Hand to boat operator at jetty
-        await updateOrderStatus(order.id, "at_jetty", { riderPayout: order.riderPayout ?? 120 });
-        setOrder((prev) => prev ? { ...prev, status: "at_jetty" } : prev);
+        await updateOrderStatus(order.id, "at_jetty", { riderPayout });
+        setOrder((prev) => prev ? { ...prev, status: "at_jetty", riderPayout } : prev);
       } else {
-        await updateOrderStatus(order.id, "delivered", { riderPayout: order.riderPayout ?? 120 });
-        setOrder((prev) => prev ? { ...prev, status: "delivered" } : prev);
+        await updateOrderStatus(order.id, "delivered", { riderPayout });
+        setOrder((prev) => prev ? { ...prev, status: "delivered", riderPayout } : prev);
       }
     }
 
@@ -259,7 +264,7 @@ export default function ActiveDeliveryPage() {
 
       {currentStep === "done" && (
         <div className="text-center mt-4">
-          <p className="font-outfit font-bold text-green-600 text-xl">+KES {order.riderPayout ?? 120} earned!</p>
+          <p className="font-outfit font-bold text-green-600 text-xl">+KES {order.riderPayout ?? 0} earned!</p>
           {isBikeToBoat && (
             <p className="font-josefin text-gray-400 text-sm mt-1">Handed to boat operator at jetty</p>
           )}

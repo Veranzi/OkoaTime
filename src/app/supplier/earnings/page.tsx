@@ -9,8 +9,8 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getOrdersBySupplier, createPayoutRequest, getPayoutRequestsByUser, tsToDate } from "@/lib/firebase/db";
 import type { Order, PayoutRequest } from "@/lib/firebase/db";
-
-const COMMISSION_RATE = 0.1;
+import { useMyRates } from "@/hooks/usePlatformRates";
+import PartnerRateBanner from "@/components/pricing/PartnerRateBanner";
 
 const payoutBadge: Record<string, "yellow" | "green" | "red"> = {
   pending: "yellow", paid: "green", rejected: "red",
@@ -29,6 +29,7 @@ export default function SupplierEarningsPage() {
   const [payoutPhone, setPayoutPhone] = useState("");
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { rates, promo, loaded: ratesLoaded, failed: ratesFailed } = useMyRates();
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -46,16 +47,20 @@ export default function SupplierEarningsPage() {
   const weekAgo = new Date(now.getTime() - 7 * 86400000);
   const monthAgo = new Date(now.getTime() - 30 * 86400000);
 
-  const net = (subtotal: number) => Math.round(subtotal * (1 - COMMISSION_RATE));
+  // Orders priced by the server carry the commission locked in at order time;
+  // older orders fall back to the supplier's current rate.
+  const commissionFor = (o: Order) => Math.round((o.subtotal * (o.commissionRate ?? rates.commissionRate)) / 100);
+  const net = (o: Order) => o.subtotal - commissionFor(o);
 
-  const weekNet = orders.filter((o) => tsToDate(o.createdAt) >= weekAgo).reduce((s, o) => s + net(o.subtotal), 0);
-  const monthNet = orders.filter((o) => tsToDate(o.createdAt) >= monthAgo).reduce((s, o) => s + net(o.subtotal), 0);
-  const totalNet = orders.reduce((s, o) => s + net(o.subtotal), 0);
+  const weekNet = orders.filter((o) => tsToDate(o.createdAt) >= weekAgo).reduce((s, o) => s + net(o), 0);
+  const monthNet = orders.filter((o) => tsToDate(o.createdAt) >= monthAgo).reduce((s, o) => s + net(o), 0);
+  const totalNet = orders.reduce((s, o) => s + net(o), 0);
   const paidOut = payouts.filter((p) => p.status === "paid").reduce((s, p) => s + p.amount, 0);
   const pendingPayout = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + p.amount, 0);
   const available = totalNet - paidOut - pendingPayout;
 
   async function requestPayout() {
+    if (!ratesLoaded || ratesFailed) return toast.error("Couldn't load your commission rate — refresh and try again.");
     if (!payoutPhone.trim()) return toast.error("Enter your M-Pesa number");
     if (available <= 0) return toast.error("No available balance to withdraw");
     if (!user) return;
@@ -99,11 +104,12 @@ export default function SupplierEarningsPage() {
         <StatCard label="Available" value={formatKES(available)} icon={<DollarSign className="w-5 h-5" />} color="green" />
       </div>
 
+      <PartnerRateBanner role="supplier" rates={rates} promo={promo} loaded={ratesLoaded} />
       <div className="bg-navy-50 rounded-2xl p-4 mb-6 text-sm font-josefin text-gray-600 flex items-start gap-2">
         <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-navy" />
         <span>
-          OkoaTime charges a <strong className="text-navy">10% platform commission</strong> on each order.
-          Net = Items Amount − Commission. Delivery fee is handled separately.
+          Net = Items Amount − Commission. Each order uses the commission that applied when it was placed.
+          Delivery fees and customer discounts don&apos;t reduce your earnings.
         </span>
       </div>
 
@@ -165,7 +171,7 @@ export default function SupplierEarningsPage() {
               </thead>
               <tbody>
                 {orders.map((o) => {
-                  const commission = Math.round(o.subtotal * COMMISSION_RATE);
+                  const commission = commissionFor(o);
                   return (
                     <tr key={o.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="py-3 pr-4 font-josefin text-gray-500 text-xs">{o.id.slice(0, 14)}</td>

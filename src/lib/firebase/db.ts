@@ -4,6 +4,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./config";
 import type { UserProfile } from "./auth";
+import type { AppliedDiscount } from "@/lib/pricing";
 
 export function tsToDate(ts: unknown): Date {
   if (!ts) return new Date();
@@ -34,9 +35,11 @@ export type OrderStatus =
 export type DeliveryType = "bike" | "boat" | "bike_to_boat";
 
 export interface OrderItem {
+  productId?: string; // set on every order priced by the server
   name: string;
   quantity: number;
   price: number;
+  unit?: string;
 }
 
 export interface Order {
@@ -48,8 +51,16 @@ export interface Order {
   categories?: string[];
   items: OrderItem[];
   subtotal: number;
-  deliveryFee: number;
-  total: number;
+  deliveryFee: number;        // full fee — courier payouts are worked out on this
+  deliveryZoneId?: string;
+  deliveryDiscount?: number;  // discounts are funded by OkoaTime
+  orderDiscount?: number;
+  discountTotal?: number;
+  appliedOffers?: AppliedDiscount[];
+  promoCode?: string;
+  commissionRate?: number;    // supplier commission % locked in at order time
+  total: number;              // what the customer pays
+  phone?: string;
   deliveryAddress: string;
   deliveryLat?: number;
   deliveryLng?: number;

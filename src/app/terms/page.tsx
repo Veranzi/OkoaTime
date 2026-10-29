@@ -33,7 +33,7 @@ const sections = [
       "Prices displayed include all applicable charges unless otherwise stated.",
       "All payments are made via M-Pesa, either by Safaricom's STK push or to the OkoaTime Till number.",
       "Cash on delivery is not available.",
-      "OkoaTime charges a 10% platform commission on item subtotals and retains 30% of delivery fees.",
+      "OkoaTime charges suppliers a platform commission on item subtotals and retains a share of delivery fees, at rates set by OkoaTime and shown in each partner's dashboard.",
     ],
   },
   {

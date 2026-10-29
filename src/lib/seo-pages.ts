@@ -270,7 +270,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
     slug: "become-a-rider",
     title: "Rider Jobs in Lamu — Earn Delivering with OkoaTime",
     description:
-      "Earn money delivering orders in Lamu Town, Shela and Manda. OkoaTime riders keep 70% of every delivery fee and get paid via M-Pesa. Bicycle, motorbike or on foot — sign up free.",
+      "Earn money delivering orders in Lamu Town, Shela and Manda. OkoaTime riders earn on every delivery and get paid via M-Pesa. Bicycle, motorbike or on foot — sign up free.",
     keywords: [
       "rider jobs Lamu", "delivery jobs Lamu", "boda boda jobs Lamu", "jobs in Lamu",
       "kazi Lamu", "delivery rider Kenya",
@@ -283,7 +283,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
     cta: JOIN,
     closing: "Know Lamu? Start earning with OkoaTime.",
     highlights: [
-      { title: "Keep 70% of the delivery fee", body: "On every order you deliver from pickup to the customer." },
+      { title: "Earn on every delivery", body: "You earn a share of the delivery fee on every order you deliver." },
       { title: "Bicycle, motorbike or on foot", body: "You don't need a motorbike to start." },
       { title: "Paid via M-Pesa", body: "Request a payout from the app and receive it on M-Pesa." },
       { title: "Track your earnings", body: "See every delivery and what you earned in your rider dashboard." },
@@ -292,7 +292,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
       {
         heading: "How much you earn",
         paragraphs: [
-          "You keep 70% of the delivery fee on every order you deliver. When an order continues to Shela or Manda by boat, you take it to the jetty and keep 40% of the delivery fee, and the boat operator earns 30% for the water leg.",
+          "You earn a share of the delivery fee on every order you deliver. When an order continues to Shela or Manda by boat, you take it to the jetty and the boat operator carries the water leg, so the fee is shared between you. Your rate is set by OkoaTime, and every delivery and what you earned on it shows in your rider dashboard.",
         ],
       },
       {
@@ -320,7 +320,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
       },
       {
         q: "How much does an OkoaTime rider earn?",
-        a: "You keep 70% of the delivery fee on every order you deliver. On orders that continue by boat, you keep 40% for taking the order to the jetty.",
+        a: "You earn a share of the delivery fee on every order you deliver. Your rate is set by OkoaTime, and your earnings for each delivery show in your rider dashboard.",
       },
       {
         q: "How do I get paid?",
@@ -364,7 +364,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
       {
         heading: "For suppliers",
         paragraphs: [
-          "Fishermen, fish sellers, mama mbogas, shops and household-goods sellers can all list on OkoaTime. OkoaTime charges a 10% commission on the item subtotal of each order.",
+          "Fishermen, fish sellers, mama mbogas, shops and household-goods sellers can all list on OkoaTime. OkoaTime takes a platform commission on the items you sell, and you can see it on every order in your supplier dashboard.",
         ],
         bullets: [
           "Seafood",
@@ -376,7 +376,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
       {
         heading: "For boat operators",
         paragraphs: [
-          "List your boat with its capacity and price per trip and take passenger bookings. You can also carry OkoaTime deliveries to Shela and Manda: keep 70% of the delivery fee when you do the whole delivery, or 30% for the water leg when a rider brings the order to the jetty.",
+          "List your boat with its capacity and price per trip and take passenger bookings. You can also carry OkoaTime deliveries to Shela and Manda and earn a share of the delivery fee — either for the whole delivery or for the water leg when a rider brings the order to the jetty.",
         ],
       },
       {
@@ -391,7 +391,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
     faqs: [
       {
         q: "How much does it cost to sell on OkoaTime?",
-        a: "Signing up is free. OkoaTime charges a 10% commission on the item subtotal of each order you receive.",
+        a: "Signing up is free. OkoaTime takes a platform commission on the items you sell, and the commission on each order shows in your supplier earnings dashboard.",
       },
       {
         q: "Do I have to deliver orders myself?",
@@ -403,7 +403,7 @@ export const SEO_PAGES: Record<SeoSlug, SeoPage> = {
       },
       {
         q: "I own a boat. What can I earn?",
-        a: "You set your own price per trip for passenger bookings. For deliveries you keep 70% of the delivery fee, or 30% when you carry the water leg of a bike-to-boat delivery.",
+        a: "You set your own price per trip for passenger bookings. For deliveries you earn a share of the delivery fee, set by OkoaTime and shown in your boat dashboard.",
       },
       {
         q: "Nina duka au mimi ni mvuvi Lamu. Naweza kuuza kupitia OkoaTime?",

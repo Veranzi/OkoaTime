@@ -9,6 +9,9 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getPendingBoatOrders, getDirectBoatOrders, getWaterDeliveryOrders, updateOrderStatus, updateOrder, tsToDate } from "@/lib/firebase/db";
 import type { Order, OrderStatus } from "@/lib/firebase/db";
 import { formatKES, formatDate, boatPayoutFor } from "@/lib/utils";
+import { useMyRates } from "@/hooks/usePlatformRates";
+import { getMyRates } from "@/lib/pricing-client";
+import PartnerRateBanner from "@/components/pricing/PartnerRateBanner";
 
 type Tab = "available" | "active" | "history";
 
@@ -23,6 +26,7 @@ function statusBadge(status: OrderStatus) {
 
 export default function BoatDeliveriesPage() {
   const { user } = useAuthStore();
+  const { rates, promo, loaded: ratesLoaded } = useMyRates();
   const [tab, setTab] = useState<Tab>("available");
   const [available, setAvailable] = useState<Order[]>([]);
   const [active, setActive] = useState<Order[]>([]);
@@ -81,10 +85,12 @@ export default function BoatDeliveriesPage() {
   async function acceptDelivery(order: Order) {
     if (!user?.uid) return;
     try {
+      // Fetch fresh so the recorded payout always uses admin's current rates.
+      const currentRates = (await getMyRates()).rates;
       await updateOrderStatus(order.id, "boat_assigned", {
         boatOperatorId: user.uid,
         boatOperatorName: user.name,
-        boatOperatorPayout: boatPayoutFor(order),
+        boatOperatorPayout: boatPayoutFor(order, currentRates),
       });
       toast.success("Delivery accepted!");
       await load();
@@ -121,6 +127,8 @@ export default function BoatDeliveriesPage() {
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
+
+      <PartnerRateBanner role="boat" rates={rates} promo={promo} loaded={ratesLoaded} />
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
@@ -195,7 +203,7 @@ export default function BoatDeliveriesPage() {
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-outfit font-bold text-green-600">{formatKES(order.boatOperatorPayout ?? boatPayoutFor(order))}</p>
+                  <p className="font-outfit font-bold text-green-600">{formatKES(order.boatOperatorPayout ?? boatPayoutFor(order, rates))}</p>
                   <Badge variant="green" className="mt-1">Delivered</Badge>
                 </div>
               </div>

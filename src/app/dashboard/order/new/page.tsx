@@ -5,26 +5,31 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import {
   ArrowLeft, ArrowRight, Check, MapPin, ShoppingCart, CreditCard, RefreshCw, Search, ImageIcon,
-  Building2, Waves, Palmtree, Sailboat, Fish, Salad, Home, ShoppingBag, Package, Smartphone, Clock, XCircle, Store,
+  Building2, Waves, Palmtree, Sailboat, Fish, Salad, Home, ShoppingBag, Package, Smartphone, Clock, XCircle, Store, Tag,
   type LucideIcon,
 } from "lucide-react";
-import { SERVICE_CATEGORIES, formatKES, toMpesaPhone } from "@/lib/utils";
+import { SERVICE_CATEGORIES, formatKES, formatDate, toMpesaPhone } from "@/lib/utils";
 import { useOrderStore } from "@/lib/store/useOrderStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { createOrder, getAvailableProducts } from "@/lib/firebase/db";
+import { getAvailableProducts } from "@/lib/firebase/db";
 import type { Product } from "@/lib/firebase/db";
 import type { DeliveryType } from "@/lib/firebase/db";
 import { auth } from "@/lib/firebase/config";
+import { getPricingSettings, getPublicOffers, placeOrder, quoteOrder, type PublicOffer } from "@/lib/pricing-client";
+import { describeDiscount, type DeliveryZone, type Quote } from "@/lib/pricing";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import GoogleMapComponent from "@/components/ui/GoogleMap";
 
-const DELIVERY_ZONES: { id: string; icon: LucideIcon; label: string; desc: string; type: DeliveryType; fee: number; badge: string }[] = [
-  { id: "lamu_town",  icon: Building2, label: "Lamu Town",    desc: "Main town · Lamu Island",             type: "bike",         fee: 100, badge: "Bike" },
-  { id: "shela",      icon: Waves,     label: "Shela",         desc: "Shela village & beach · Lamu Island",  type: "bike",         fee: 150, badge: "Bike" },
-  { id: "manda",      icon: Palmtree,  label: "Manda Island",  desc: "Across the channel · bike + boat",     type: "bike_to_boat", fee: 250, badge: "Bike + Boat" },
-  { id: "other",      icon: Sailboat,  label: "Other Island",  desc: "Pate, Siyu or further destinations",  type: "boat",         fee: 400, badge: "Boat" },
-];
+// Zones and their fees come from admin Settings; these only pick an icon/badge.
+const ZONE_ICONS: Record<string, LucideIcon> = {
+  lamu_town: Building2,
+  shela: Waves,
+  manda: Palmtree,
+  other: Sailboat,
+};
+const TYPE_BADGE: Record<DeliveryType, string> = { bike: "Bike", bike_to_boat: "Bike + Boat", boat: "Boat" };
+const zoneIcon = (z: DeliveryZone): LucideIcon => ZONE_ICONS[z.id] ?? (z.type === "boat" ? Sailboat : MapPin);
 
 // Local icon lookup for SERVICE_CATEGORIES ids (utils.ts stores no icon component,
 // only a plain label/description, so this file maps id -> icon for display).
@@ -43,7 +48,7 @@ export default function NewOrderPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const {
-    step, items, deliveryAddress, deliveryType, deliveryFee, deliveryZoneId,
+    step, items, deliveryAddress, deliveryFee, deliveryZoneId,
     paymentMethod, phone, notes,
     setStep, setItems, setDelivery, setDeliveryZone, setPayment, setNotes, reset,
   } = useOrderStore();
@@ -68,12 +73,76 @@ export default function NewOrderPage() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Admin-set delivery zones, running offers and the server's price quote.
+  const [zones, setZones] = useState<DeliveryZone[]>([]);
+  const [zonesLoading, setZonesLoading] = useState(true);
+  const [offers, setOffers] = useState<PublicOffer[]>([]);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoting, setQuoting] = useState(false);
+  // Once the order exists, payment retries reuse it instead of creating another.
+  const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+
   useEffect(() => {
     getAvailableProducts()
       .then(setAllProducts)
       .catch(() => toast.error("Could not load products"))
       .finally(() => setProductsLoading(false));
+    getPricingSettings()
+      .then((s) => setZones(s.deliveryZones.filter((z) => z.active)))
+      .catch(() => toast.error("Could not load delivery areas"))
+      .finally(() => setZonesLoading(false));
+    getPublicOffers().then(setOffers).catch(() => setOffers([]));
   }, []);
+
+  // Any change to the cart, area or promo code invalidates an order already created.
+  useEffect(() => { setPlacedOrderId(null); }, [items, deliveryZoneId, promoCode]);
+
+  async function refreshQuote(code: string | null = promoCode) {
+    if (!deliveryZoneId || items.length === 0) return null;
+    setQuoting(true);
+    try {
+      const q = await quoteOrder({
+        items: items.filter((i) => i.productId).map((i) => ({ productId: i.productId!, quantity: i.quantity })),
+        zoneId: deliveryZoneId,
+        promoCode: code,
+      });
+      setQuote(q);
+      return q;
+    } catch (err) {
+      setQuote(null);
+      toast.error(err instanceof Error ? err.message : "Could not price your order");
+      return null;
+    } finally {
+      setQuoting(false);
+    }
+  }
+
+  useEffect(() => {
+    if (step === 3) refreshQuote();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  async function applyPromo() {
+    const code = promoInput.trim();
+    if (!code) return;
+    const q = await refreshQuote(code);
+    if (!q) return;
+    if (q.promoError) {
+      toast.error(q.promoError);
+      await refreshQuote(promoCode); // keep the previous (valid) state
+      return;
+    }
+    setPromoCode(code.toUpperCase());
+    toast.success("Promo code applied");
+  }
+
+  async function removePromo() {
+    setPromoCode(null);
+    setPromoInput("");
+    await refreshQuote(null);
+  }
 
   // Poll payment status every 3 s while awaiting confirmation
   useEffect(() => {
@@ -128,7 +197,8 @@ export default function NewOrderPage() {
   }, [paymentStatus]);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const total = subtotal + deliveryFee;
+  // What the customer pays is always the server's quote; this is only a preview.
+  const total = quote?.total ?? subtotal + deliveryFee;
 
   const cartItemCount = Object.values(selectedQty).reduce((s, q) => s + q, 0);
   const cartSubtotal = allProducts.reduce(
@@ -186,6 +256,7 @@ export default function NewOrderPage() {
       return;
     }
     const newItems = selected.map((p) => ({
+      productId: p.id,
       name: p.name,
       quantity: selectedQty[p.name]!,
       price: p.price,
@@ -214,36 +285,41 @@ export default function NewOrderPage() {
       return;
     }
 
-    const { category, categories, supplierId, supplierName } = useOrderStore.getState();
-    const orderData = {
-      customerId: user?.uid ?? "",
-      customerName: user?.name ?? "",
-      customerPhone: user?.phone ?? "",
-      category: category || "mixed",
-      categories: categories.length ? categories : (category ? [category] : []),
-      items,
-      subtotal,
-      deliveryFee: deliveryFee,
-      total,
-      deliveryAddress,
-      deliveryType,
-      paymentMethod,
-      paymentStatus: "pending" as const,
-      status: "pending" as const,
-      ...(notes ? { notes } : {}),
-      ...(supplierId ? { supplierId, supplierName } : {}),
+    if (!quote) {
+      toast.error("Please review your order total first.");
+      return setStep(3);
+    }
+
+    // The server prices the order itself from product ids, the zone and the
+    // promo code — the browser never sends prices or totals.
+    const { deliveryLat, deliveryLng } = useOrderStore.getState();
+    const create = async () => {
+      if (placedOrderId) return placedOrderId;
+      const { orderId, total: serverTotal } = await placeOrder({
+        items: items.filter((i) => i.productId).map((i) => ({ productId: i.productId!, quantity: i.quantity })),
+        zoneId: deliveryZoneId,
+        promoCode,
+        deliveryAddress,
+        ...(deliveryLat !== undefined ? { deliveryLat } : {}),
+        ...(deliveryLng !== undefined ? { deliveryLng } : {}),
+        paymentMethod,
+        ...(paymentMethod === "mpesa" && (phone || user?.phone) ? { phone: phone || user?.phone } : {}),
+        ...(notes ? { notes } : {}),
+      });
+      if (serverTotal !== quote.total) setQuote({ ...quote, total: serverTotal });
+      setPlacedOrderId(orderId);
+      return orderId;
     };
 
     if (paymentMethod === "till") {
       try {
-        await createOrder(orderData);
+        await create();
         toast.success("Order placed! Pay via the Till Number shown on your orders page.");
         reset();
         router.push("/dashboard/orders");
       } catch (err) {
         console.error("Till order error:", err);
-        const msg = err instanceof Error ? err.message : String(err);
-        toast.error(msg.includes("permission") ? "Session expired — please sign in again." : "Failed to place order. Try again.");
+        toast.error(err instanceof Error ? err.message : "Failed to place order. Try again.");
       }
       return;
     }
@@ -251,7 +327,14 @@ export default function NewOrderPage() {
     // M-Pesa flow
     setPaymentStatus("sending");
     try {
-      const docId = await createOrder(orderData);
+      let docId: string;
+      try {
+        docId = await create();
+      } catch (err) {
+        setPaymentStatus("idle");
+        toast.error(err instanceof Error ? err.message : "Failed to place order. Try again.");
+        return;
+      }
 
       const idToken = await firebaseUser.getIdToken();
       const res = await fetch("/api/payments/mpesa/stkpush", {
@@ -576,9 +659,26 @@ export default function NewOrderPage() {
                 <p className="font-josefin text-gray-400 text-xs mb-3">
                   Pick your area — delivery method and fee are set automatically.
                 </p>
+                {offers.length > 0 && (
+                  <div className="bg-orange-50 rounded-2xl p-3 mb-3 space-y-1">
+                    {offers.map((o) => (
+                      <p key={o.id} className="font-josefin text-sm text-orange-800 flex items-start gap-2">
+                        <Tag className="w-4 h-4 flex-shrink-0 mt-0.5 text-orange" />
+                        <span>
+                          <strong>{o.name}</strong> — {describeDiscount(o)}
+                          {o.zoneIds?.length ? ` in ${o.zoneIds.map((id) => zones.find((z) => z.id === id)?.label ?? id).join(", ")}` : ""}
+                          {o.minSubtotal ? ` on orders over ${formatKES(o.minSubtotal)}` : ""}
+                          {o.endsAt ? ` · until ${formatDate(new Date(o.endsAt))}` : ""}
+                        </span>
+                      </p>
+                    ))}
+                  </div>
+                )}
+                {zonesLoading && <div className="h-24 rounded-2xl bg-gray-50 animate-pulse" />}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {DELIVERY_ZONES.map((zone) => {
+                  {zones.map((zone) => {
                     const selected = deliveryZoneId === zone.id;
+                    const Icon = zoneIcon(zone);
                     return (
                       <button
                         key={zone.id}
@@ -587,12 +687,12 @@ export default function NewOrderPage() {
                           selected ? "border-orange bg-orange-50" : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
-                        <zone.icon className="w-6 h-6 flex-shrink-0 mt-0.5 text-navy" />
+                        <Icon className="w-6 h-6 flex-shrink-0 mt-0.5 text-navy" />
                         <div className="flex-1 min-w-0">
                           <p className="font-outfit font-bold text-navy text-sm">{zone.label}</p>
                           <p className="font-josefin text-gray-500 text-xs">{zone.desc}</p>
                           <div className="flex items-center justify-between mt-2">
-                            <span className="font-josefin text-xs text-gray-400">{zone.badge}</span>
+                            <span className="font-josefin text-xs text-gray-400">{TYPE_BADGE[zone.type]}</span>
                             <span className={`font-outfit font-bold text-sm ${selected ? "text-orange" : "text-navy"}`}>
                               KES {zone.fee}
                             </span>
@@ -696,31 +796,62 @@ export default function NewOrderPage() {
                 </p>
                 <p className="font-josefin text-gray-600 text-sm">{deliveryAddress}</p>
                 {deliveryZoneId && (() => {
-                  const zone = DELIVERY_ZONES.find((z) => z.id === deliveryZoneId);
-                  return zone ? (
+                  const zone = zones.find((z) => z.id === deliveryZoneId);
+                  if (!zone) return null;
+                  const Icon = zoneIcon(zone);
+                  return (
                     <p className="font-josefin text-gray-400 text-xs mt-1 flex items-center gap-1">
-                      <zone.icon className="w-3.5 h-3.5" /> {zone.label} · {zone.badge}
+                      <Icon className="w-3.5 h-3.5" /> {zone.label} · {TYPE_BADGE[zone.type]}
                     </p>
-                  ) : null;
+                  );
                 })()}
+              </div>
+
+              {/* Promo code */}
+              <div>
+                <label className="label">Promo code</label>
+                {promoCode ? (
+                  <div className="flex items-center justify-between bg-green-50 rounded-xl px-4 py-3">
+                    <span className="font-outfit font-bold text-green-700 flex items-center gap-2"><Tag className="w-4 h-4" /> {promoCode}</span>
+                    <button onClick={removePromo} className="font-josefin text-sm text-gray-500 hover:text-red-500">Remove</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input className="input-field flex-1 uppercase" placeholder="Enter code" value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") applyPromo(); }} />
+                    <Button variant="secondary" size="sm" onClick={applyPromo} disabled={quoting || !promoInput.trim()}>Apply</Button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between font-josefin text-gray-500 text-sm">
-                  <span>Subtotal</span><span>{formatKES(subtotal)}</span>
+                  <span>Subtotal</span><span>{formatKES(quote?.subtotal ?? subtotal)}</span>
                 </div>
                 <div className="flex justify-between font-josefin text-gray-500 text-sm">
-                  <span>Delivery Fee</span><span>{formatKES(deliveryFee)}</span>
+                  <span>Delivery Fee</span><span>{formatKES(quote?.deliveryFee ?? deliveryFee)}</span>
                 </div>
+                {quote?.applied.map((a) => (
+                  <div key={a.offerId} className="flex justify-between font-josefin text-green-600 text-sm">
+                    <span>{a.name}{a.code ? ` (${a.code})` : ""}</span><span>−{formatKES(a.amount)}</span>
+                  </div>
+                ))}
                 <div className="flex justify-between font-outfit font-bold text-navy text-lg border-t border-gray-200 pt-2 mt-2">
-                  <span>Total</span><span>{formatKES(total)}</span>
+                  <span>Total</span>
+                  <span>{quoting ? "…" : quote ? formatKES(quote.total) : "—"}</span>
                 </div>
               </div>
             </div>
 
-            <Button variant="primary" size="md" className="w-full mt-6" onClick={() => setStep(4)}>
+            <Button variant="primary" size="md" className="w-full mt-6" disabled={!quote || quoting} onClick={() => setStep(4)}>
               Proceed to Payment <ArrowRight className="w-4 h-4" />
             </Button>
+            {!quote && !quoting && (
+              <button onClick={() => refreshQuote()} className="w-full mt-2 text-teal font-josefin text-sm font-semibold">
+                Couldn&apos;t load your total — tap to retry
+              </button>
+            )}
           </div>
         )}
 

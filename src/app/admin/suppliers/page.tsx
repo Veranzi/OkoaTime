@@ -7,10 +7,12 @@ import toast from "react-hot-toast";
 import { formatDate } from "@/lib/utils";
 import { getUsersByRole, updateUserDoc, tsToDate } from "@/lib/firebase/db";
 import type { UserProfile } from "@/lib/firebase/auth";
+import { usePlatformRates } from "@/hooks/usePlatformRates";
 
 export default function AdminSuppliersPage() {
   const [suppliers, setSuppliers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const { rates, loaded: ratesLoaded } = usePlatformRates();
 
   async function load() {
     setLoading(true);
@@ -27,10 +29,16 @@ export default function AdminSuppliersPage() {
     } catch { toast.error("Failed to update"); }
   }
 
-  async function updateCommission(uid: string, rate: number) {
+  async function updateCommission(supplier: UserProfile, rate: number) {
+    const uid = supplier.uid;
+    // Blurring the field without changing it must not pin a supplier who
+    // follows the platform default to a fixed rate.
+    const current = supplier.commission ?? rates.commissionRate;
+    if (rate === current) return;
+    if (!Number.isFinite(rate) || rate < 0 || rate > 100) return toast.error("Commission must be between 0 and 100");
     try {
       await updateUserDoc(uid, { commission: rate });
-      setSuppliers((prev) => prev.map((s) => s.uid === uid ? { ...s, commission: rate } as UserProfile : s));
+      setSuppliers((prev) => prev.map((s) => s.uid === uid ? { ...s, commission: rate } : s));
       toast.success("Commission rate updated");
     } catch { toast.error("Failed to update"); }
   }
@@ -59,7 +67,8 @@ export default function AdminSuppliersPage() {
       ) : (
         <div className="space-y-4">
           {suppliers.map((supplier) => {
-            const commission = (supplier as UserProfile & { commission?: number }).commission ?? 10;
+            const commission = supplier.commission ?? rates.commissionRate;
+            const usesDefault = supplier.commission === undefined;
             return (
               <div key={supplier.uid} className={`card ${supplier.status === "pending" ? "border-l-4 border-l-orange" : ""}`}>
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -88,14 +97,18 @@ export default function AdminSuppliersPage() {
                   <div className="flex items-center gap-2">
                     <label className="font-josefin text-gray-500 text-sm">Commission Rate:</label>
                     <input
+                      // Re-key once rates load so the default shown isn't the pre-load fallback.
+                      key={`${supplier.uid}-${commission}`}
                       type="number"
                       className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm font-outfit font-bold text-navy text-center focus:outline-none focus:ring-1 focus:ring-teal"
                       defaultValue={commission}
                       min={0}
-                      max={30}
-                      onBlur={(e) => updateCommission(supplier.uid, Number(e.target.value))}
+                      max={100}
+                      disabled={!ratesLoaded}
+                      onBlur={(e) => updateCommission(supplier, Number(e.target.value))}
                     />
                     <span className="font-josefin text-gray-400 text-sm">%</span>
+                    {usesDefault && <span className="font-josefin text-gray-400 text-xs">(platform default)</span>}
                   </div>
                   <div className="flex gap-2">
                     {supplier.status === "pending" && (

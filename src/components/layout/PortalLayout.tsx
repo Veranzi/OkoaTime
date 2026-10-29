@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, ShoppingBag, User, LogOut, Menu, X,
   Package, DollarSign, Settings, Users, TrendingUp, Ship, Truck,
-  Bell, Wallet, Code2,
+  Bell, Wallet, Code2, Percent, Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logoutUser } from "@/lib/firebase/auth";
@@ -57,6 +57,8 @@ const portalNavs: Record<PortalType, NavItem[]> = {
     { label: "Riders", href: "/admin/riders", icon: <Truck className="w-5 h-5" /> },
     { label: "Payments", href: "/admin/payments", icon: <DollarSign className="w-5 h-5" /> },
     { label: "Payouts", href: "/admin/payouts", icon: <Wallet className="w-5 h-5" /> },
+    { label: "Partner Rates", href: "/admin/pricing", icon: <Percent className="w-5 h-5" /> },
+    { label: "Offers", href: "/admin/offers", icon: <Tag className="w-5 h-5" /> },
     { label: "Analytics", href: "/admin", icon: <TrendingUp className="w-5 h-5" /> },
     { label: "API Docs", href: "/admin/api-docs", icon: <Code2 className="w-5 h-5" /> },
     { label: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },

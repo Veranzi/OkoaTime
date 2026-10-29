@@ -2,13 +2,14 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Download, DollarSign, TrendingUp, RefreshCw, Banknote, Smartphone, Search, RotateCw } from "lucide-react";
-import { formatKES, formatDate } from "@/lib/utils";
+import { formatKES, formatDate, orderSplit, supplierCommissionRate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { getAllOrders, tsToDate } from "@/lib/firebase/db";
+import { getAllOrders, getUsersByRole, tsToDate } from "@/lib/firebase/db";
 import type { Order, Payment, PaymentStatus } from "@/lib/firebase/db";
 import { auth } from "@/lib/firebase/config";
 import { useAuthStore } from "@/lib/store/useAuthStore";
+import { usePlatformRates } from "@/hooks/usePlatformRates";
 
 const PAYMENT_STATUS_BADGE: Record<PaymentStatus, "green" | "yellow" | "red" | "orange" | "gray"> = {
   INITIATED: "gray",
@@ -23,9 +24,6 @@ async function authHeaders(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-const ITEM_COMM = 0.1;
-const DELIVERY_COMM = 0.3;
-
 // A "payment" is any order that has been delivered or has paymentStatus=paid
 function isPaid(o: Order) {
   return o.status === "delivered" || o.paymentStatus === "paid";
@@ -35,11 +33,20 @@ export default function AdminPaymentsPage() {
   const { loading: authLoading } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const { rates } = usePlatformRates();
+  const [supplierCommission, setSupplierCommission] = useState<Record<string, number | undefined>>({});
 
   async function load() {
     setLoading(true);
-    try { setOrders(await getAllOrders()); } finally { setLoading(false); }
+    try {
+      const [all, suppliers] = await Promise.all([getAllOrders(), getUsersByRole("supplier")]);
+      setOrders(all);
+      setSupplierCommission(Object.fromEntries(suppliers.map((s) => [s.uid, s.commission])));
+    } finally { setLoading(false); }
   }
+
+  const split = (o: Order) =>
+    orderSplit(o, rates, supplierCommissionRate({ commission: o.supplierId ? supplierCommission[o.supplierId] : undefined }, rates));
 
   useEffect(() => { load(); }, []);
 
@@ -177,9 +184,10 @@ export default function AdminPaymentsPage() {
   const till  = paid.filter((o) => o.paymentMethod === "till");
 
   const totalRevenue    = paid.reduce((s, o) => s + o.total, 0);
-  const totalItemComm   = paid.reduce((s, o) => s + Math.round(o.subtotal * ITEM_COMM), 0);
-  const totalDelComm    = paid.reduce((s, o) => s + Math.round((o.deliveryFee ?? 0) * DELIVERY_COMM), 0);
-  const totalOkoa       = totalItemComm + totalDelComm;
+  const totalItemComm   = paid.reduce((s, o) => s + split(o).itemComm, 0);
+  const totalDelComm    = paid.reduce((s, o) => s + split(o).deliveryComm, 0);
+  const totalDiscounts  = paid.reduce((s, o) => s + split(o).discounts, 0);
+  const totalOkoa       = totalItemComm + totalDelComm - totalDiscounts;
 
   return (
     <div className="max-w-6xl">
@@ -214,7 +222,10 @@ export default function AdminPaymentsPage() {
             <p className="font-josefin text-xs text-gray-300">OkoaTime Revenue</p>
           </div>
           <p className="font-outfit font-black text-2xl text-orange">{formatKES(totalOkoa)}</p>
-          <p className="font-josefin text-gray-400 text-xs mt-1">Items {formatKES(totalItemComm)} + Delivery {formatKES(totalDelComm)}</p>
+          <p className="font-josefin text-gray-400 text-xs mt-1">
+            Items {formatKES(totalItemComm)} + Delivery {formatKES(totalDelComm)}
+            {totalDiscounts > 0 && <> − Offers {formatKES(totalDiscounts)}</>}
+          </p>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -248,16 +259,14 @@ export default function AdminPaymentsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Order ID", "Customer", "Supplier", "Method", "Subtotal", "Item Comm (10%)", "Delivery Fee", "Del. Comm (30%)", "OkoaTime", "Total", "Date"].map((h) => (
+                  {["Order ID", "Customer", "Supplier", "Method", "Subtotal", "Item Comm", "Delivery Fee", "Del. Comm", "OkoaTime", "Total", "Date"].map((h) => (
                     <th key={h} className="text-left font-outfit font-semibold text-gray-400 text-xs p-4 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {paid.map((o) => {
-                  const itemComm   = Math.round(o.subtotal * ITEM_COMM);
-                  const delComm    = Math.round((o.deliveryFee ?? 0) * DELIVERY_COMM);
-                  const okoaTotal  = itemComm + delComm;
+                  const { itemComm, deliveryComm: delComm, okoaRevenue: okoaTotal } = split(o);
                   return (
                     <tr key={o.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="p-4 font-josefin text-teal text-xs font-semibold">{o.id.slice(0, 12)}</td>

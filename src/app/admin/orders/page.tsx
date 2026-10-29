@@ -1,14 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Search, Filter, RefreshCw, TrendingUp, DollarSign, Truck, Package, Ship } from "lucide-react";
-import { formatKES, formatDate } from "@/lib/utils";
+import { formatKES, formatDate, orderSplit, supplierCommissionRate, type PlatformRates } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
-import { getAllOrders, tsToDate } from "@/lib/firebase/db";
+import { getAllOrders, getUsersByRole, tsToDate } from "@/lib/firebase/db";
 import type { Order } from "@/lib/firebase/db";
-
-const ITEM_COMM = 0.1;       // OkoaTime takes 10% of subtotal from supplier
-const DELIVERY_COMM = 0.3;   // OkoaTime keeps 30% of delivery fee
-const RIDER_SHARE = 0.7;     // Rider gets 70% of delivery fee
+import { usePlatformRates } from "@/hooks/usePlatformRates";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending", confirmed: "Confirmed", ready: "Ready",
@@ -24,14 +21,9 @@ const statusBadge: Record<string, "green" | "red" | "yellow" | "blue" | "teal" |
   delivered: "green", cancelled: "red",
 };
 
-function calc(o: Order) {
-  const itemComm   = Math.round(o.subtotal * ITEM_COMM);
-  const supplierNet = o.subtotal - itemComm;
-  const deliveryFee = o.deliveryFee ?? 0;
-  const deliveryComm = Math.round(deliveryFee * DELIVERY_COMM);
-  const riderPayout  = o.riderPayout ?? Math.round(deliveryFee * RIDER_SHARE);
-  const okoaRevenue  = itemComm + deliveryComm;
-  return { itemComm, supplierNet, deliveryFee, deliveryComm, riderPayout, okoaRevenue };
+function calc(o: Order, rates: PlatformRates, supplierCommission: Record<string, number | undefined>) {
+  const commissionPct = supplierCommissionRate({ commission: o.supplierId ? supplierCommission[o.supplierId] : undefined }, rates);
+  return orderSplit(o, rates, commissionPct);
 }
 
 export default function AdminOrdersPage() {
@@ -39,10 +31,16 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const { rates } = usePlatformRates();
+  const [supplierCommission, setSupplierCommission] = useState<Record<string, number | undefined>>({});
 
   async function load() {
     setLoading(true);
-    try { setOrders(await getAllOrders()); } finally { setLoading(false); }
+    try {
+      const [all, suppliers] = await Promise.all([getAllOrders(), getUsersByRole("supplier")]);
+      setOrders(all);
+      setSupplierCommission(Object.fromEntries(suppliers.map((s) => [s.uid, s.commission])));
+    } finally { setLoading(false); }
   }
 
   useEffect(() => { load(); }, []);
@@ -55,7 +53,7 @@ export default function AdminOrdersPage() {
 
   // Summary totals across filtered set
   const totals = filtered.reduce((acc, o) => {
-    const c = calc(o);
+    const c = calc(o, rates, supplierCommission);
     return {
       grandTotal:     acc.grandTotal     + o.total,
       subtotal:       acc.subtotal       + o.subtotal,
@@ -64,9 +62,11 @@ export default function AdminOrdersPage() {
       deliveryFee:    acc.deliveryFee    + c.deliveryFee,
       deliveryComm:   acc.deliveryComm   + c.deliveryComm,
       riderPayout:    acc.riderPayout    + c.riderPayout,
+      boatPayout:     acc.boatPayout     + c.boatPayout,
+      discounts:      acc.discounts      + c.discounts,
       okoaRevenue:    acc.okoaRevenue    + c.okoaRevenue,
     };
-  }, { grandTotal: 0, subtotal: 0, itemComm: 0, supplierNet: 0, deliveryFee: 0, deliveryComm: 0, riderPayout: 0, okoaRevenue: 0 });
+  }, { grandTotal: 0, subtotal: 0, itemComm: 0, supplierNet: 0, deliveryFee: 0, deliveryComm: 0, riderPayout: 0, boatPayout: 0, discounts: 0, okoaRevenue: 0 });
 
   return (
     <div className="max-w-full">
@@ -89,7 +89,10 @@ export default function AdminOrdersPage() {
               <p className="font-josefin text-xs text-gray-300">OkoaTime Revenue</p>
             </div>
             <p className="font-outfit font-black text-xl text-orange">{formatKES(totals.okoaRevenue)}</p>
-            <p className="font-josefin text-gray-400 text-xs mt-1">Item {formatKES(totals.itemComm)} + Delivery {formatKES(totals.deliveryComm)}</p>
+            <p className="font-josefin text-gray-400 text-xs mt-1">
+              Item {formatKES(totals.itemComm)} + Delivery {formatKES(totals.deliveryComm)}
+              {totals.discounts > 0 && <> − Offers {formatKES(totals.discounts)}</>}
+            </p>
           </div>
           <div className="card p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -97,7 +100,7 @@ export default function AdminOrdersPage() {
               <p className="font-josefin text-xs text-gray-400">Suppliers Get</p>
             </div>
             <p className="font-outfit font-black text-xl text-navy">{formatKES(totals.supplierNet)}</p>
-            <p className="font-josefin text-gray-400 text-xs mt-1">90% of {formatKES(totals.subtotal)} subtotal</p>
+            <p className="font-josefin text-gray-400 text-xs mt-1">After commission on {formatKES(totals.subtotal)} subtotal</p>
           </div>
           <div className="card p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -105,15 +108,15 @@ export default function AdminOrdersPage() {
               <p className="font-josefin text-xs text-gray-400">Riders Get</p>
             </div>
             <p className="font-outfit font-black text-xl text-navy">{formatKES(totals.riderPayout)}</p>
-            <p className="font-josefin text-gray-400 text-xs mt-1">70% of {formatKES(totals.deliveryFee)} delivery</p>
+            <p className="font-josefin text-gray-400 text-xs mt-1">From {formatKES(totals.deliveryFee)} delivery fees</p>
           </div>
           <div className="card p-4">
             <div className="flex items-center gap-2 mb-1">
               <Ship className="w-4 h-4 text-blue-500" />
               <p className="font-josefin text-xs text-gray-400">Boat Operators</p>
             </div>
-            <p className="font-outfit font-black text-xl text-navy">—</p>
-            <p className="font-josefin text-gray-400 text-xs mt-1">See Bookings section</p>
+            <p className="font-outfit font-black text-xl text-navy">{formatKES(totals.boatPayout)}</p>
+            <p className="font-josefin text-gray-400 text-xs mt-1">Boat deliveries · bookings in Bookings section</p>
           </div>
           <div className="card p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -166,11 +169,11 @@ export default function AdminOrdersPage() {
                   <th className="text-left font-outfit font-semibold text-gray-400 text-xs p-3 whitespace-nowrap">Rider</th>
                   <th className="text-left font-outfit font-semibold text-gray-400 text-xs p-3 whitespace-nowrap">Status</th>
                   <th className="text-left font-outfit font-semibold text-gray-400 text-xs p-3 whitespace-nowrap">Subtotal</th>
-                  <th className="text-left font-outfit font-semibold text-teal text-xs p-3 whitespace-nowrap">Supplier Net (90%)</th>
-                  <th className="text-left font-outfit font-semibold text-orange text-xs p-3 whitespace-nowrap">Item Comm (10%)</th>
+                  <th className="text-left font-outfit font-semibold text-teal text-xs p-3 whitespace-nowrap">Supplier Net</th>
+                  <th className="text-left font-outfit font-semibold text-orange text-xs p-3 whitespace-nowrap">Item Comm</th>
                   <th className="text-left font-outfit font-semibold text-gray-400 text-xs p-3 whitespace-nowrap">Delivery Fee</th>
-                  <th className="text-left font-outfit font-semibold text-blue-500 text-xs p-3 whitespace-nowrap">Rider (70%)</th>
-                  <th className="text-left font-outfit font-semibold text-orange text-xs p-3 whitespace-nowrap">Delivery Comm (30%)</th>
+                  <th className="text-left font-outfit font-semibold text-blue-500 text-xs p-3 whitespace-nowrap">Rider</th>
+                  <th className="text-left font-outfit font-semibold text-orange text-xs p-3 whitespace-nowrap">Delivery Comm</th>
                   <th className="text-left font-outfit font-semibold text-green-600 text-xs p-3 whitespace-nowrap">OkoaTime Total</th>
                   <th className="text-left font-outfit font-semibold text-navy text-xs p-3 whitespace-nowrap">Order Total</th>
                   <th className="text-left font-outfit font-semibold text-gray-400 text-xs p-3 whitespace-nowrap">Date</th>
@@ -178,7 +181,7 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody>
                 {filtered.map((order) => {
-                  const c = calc(order);
+                  const c = calc(order, rates, supplierCommission);
                   return (
                     <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                       <td className="p-3 font-josefin text-teal font-semibold text-xs">{order.id.slice(0, 12)}</td>
